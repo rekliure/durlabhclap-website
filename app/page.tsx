@@ -223,6 +223,25 @@ export default function Home() {
           id="founder"
           className="mt-16 grid gap-6 md:grid-cols-[1.4fr,1fr] md:items-center"
         >
+          <div className="flex justify-center md:justify-start">
+            <div className="w-full max-w-xs rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
+              <div className="relative mb-3 h-44 w-full overflow-hidden rounded-xl border border-slate-800 bg-slate-800/60">
+                {/* TODO: Replace placeholder with actual founder photo */}
+                <Image
+                  src="/founder-sahil.jpg"
+                  alt="Founder - Sahil Dogra"
+                  fill
+                  className="object-cover"
+                />
+              </div>
+              <p className="text-sm font-semibold text-slate-50">
+                Sahil Dogra
+              </p>
+              <p className="text-[11px] text-slate-400">
+                Founder, DurlabhCLAP Foundation
+              </p>
+            </div>
+          </div>
           <div className="space-y-4">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-300">
               Message from the Founder
@@ -260,25 +279,6 @@ export default function Home() {
               </span>
               , Founder, DurlabhCLAP Foundation
             </p>
-          </div>
-          <div className="flex justify-center md:justify-end">
-            <div className="w-full max-w-xs rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
-              <div className="relative mb-3 h-44 w-full overflow-hidden rounded-xl border border-slate-800 bg-slate-800/60">
-                {/* TODO: Replace placeholder with actual founder photo */}
-                <Image
-                  src="/founder-sahil.jpg"
-                  alt="Founder - Sahil Dogra"
-                  fill
-                  className="object-cover"
-                />
-              </div>
-              <p className="text-sm font-semibold text-slate-50">
-                Sahil Dogra
-              </p>
-              <p className="text-[11px] text-slate-400">
-                Founder, DurlabhCLAP Foundation
-              </p>
-            </div>
           </div>
         </section>
 
