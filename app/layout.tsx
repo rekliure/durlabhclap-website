@@ -1,4 +1,6 @@
+// app/layout.tsx
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -15,7 +17,7 @@ export const metadata: Metadata = {
       "Reimagining rural education through creativity, care and culture in rural Himachal Pradesh.",
     url: "/",
     siteName: "DurlabhCLAP Foundation",
-    images: ["/og-image.jpg"], // isko next step me create karenge
+    images: ["/og-image.jpg"], // optional – file na bhi ho to build tootega nahi
     locale: "en_IN",
     type: "website",
   },
@@ -30,3 +32,15 @@ export const metadata: Metadata = {
     icon: "/favicon.ico",
   },
 };
+
+export default function RootLayout({
+  children,
+}: {
+  children: ReactNode;
+}) {
+  return (
+    <html lang="en">
+      <body>{children}</body>
+    </html>
+  );
+}
