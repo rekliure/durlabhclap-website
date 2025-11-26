@@ -1,37 +1,20 @@
+"use client";
+
 // app/page.tsx
 import Link from "next/link";
-import type { ReactNode } from "react";
 import Image from "next/image";
-
-const stats = [
-  { label: "Children reached", value: "50+" },
-  { label: "Centre duration", value: "1.5 years" },
-  { label: "Learning spaces", value: "1 pilot centre" },
-];
-
-const programs = [
-  {
-    title: "Early English Exposure",
-    description:
-      "Introducing spoken English and basic literacy through stories, songs, role play and everyday conversation.",
-  },
-  {
-    title: "Foundational Mathematics",
-    description:
-      "Building number sense, patterns and basic operations using play, objects, games and age-appropriate activities.",
-  },
-  {
-    title: "Art, Expression & Computers",
-    description:
-      "Drawing, colouring, local art, basic computer exposure and expressive activities that keep children curious.",
-  },
-];
+import { content } from "../src/data/lang";
+import { useLang } from "./components/LanguageProvider";
 
 export default function Home() {
   const currentYear = new Date().getFullYear();
+  const { lang, pref, setPref } = useLang();
+
+  const stats = content[lang].stats;
+  const programs = content[lang].programs.items;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-50">
+    <div className="min-h-screen bg-slate-950 text-slate-50 relative overflow-hidden">
       {/* NAVBAR */}
       <header className="border-b border-slate-800 bg-slate-950/80 backdrop-blur sticky top-0 z-30">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
@@ -53,29 +36,74 @@ export default function Home() {
               </p>
             </div>
           </div>
+
           <nav className="hidden gap-6 text-sm text-slate-300 md:flex">
             <a href="#impact" className="hover:text-blue-300">
-              Impact
+              {content[lang].nav.impact}
             </a>
             <a href="#programs" className="hover:text-blue-300">
-              Programs
+              {content[lang].nav.programs}
             </a>
             <a href="#founder" className="hover:text-blue-300">
-              Founder
+              {content[lang].nav.founder}
             </a>
             <Link href="/journey" className="hover:text-blue-300">
-              Our Journey
+              {content[lang].nav.journey}
             </Link>
             <a href="#contact" className="hover:text-blue-300">
-              Contact
+              {content[lang].nav.contact}
             </a>
           </nav>
-          <a
-            href="#contact"
-            className="rounded-full bg-blue-500 px-4 py-1.5 text-xs font-semibold text-slate-950 shadow-lg shadow-blue-500/30 hover:bg-blue-400"
-          >
-            Connect with us
-          </a>
+
+          <div className="flex items-center gap-3">
+            {/* LANGUAGE TOGGLE (saved preference + auto + hinglish) */}
+            <div className="hidden md:flex items-center gap-1 rounded-full border border-slate-700 bg-slate-950/60 px-2 py-1 text-[11px] text-slate-300">
+              <span className="mr-1 text-slate-400">{content[lang].lang.label}:</span>
+
+              <button
+                onClick={() => setPref("auto")}
+                className={`rounded-full px-2 py-0.5 hover:text-blue-200 ${
+                  pref === "auto" ? "bg-blue-500/15 text-blue-200" : ""
+                }`}
+              >
+                {content[lang].lang.auto}
+              </button>
+
+              <button
+                onClick={() => setPref("en")}
+                className={`rounded-full px-2 py-0.5 hover:text-blue-200 ${
+                  pref === "en" ? "bg-blue-500/15 text-blue-200" : ""
+                }`}
+              >
+                {content[lang].lang.en}
+              </button>
+
+              <button
+                onClick={() => setPref("hi")}
+                className={`rounded-full px-2 py-0.5 hover:text-blue-200 ${
+                  pref === "hi" ? "bg-blue-500/15 text-blue-200" : ""
+                }`}
+              >
+                {content[lang].lang.hi}
+              </button>
+
+              <button
+                onClick={() => setPref("hing")}
+                className={`rounded-full px-2 py-0.5 hover:text-blue-200 ${
+                  pref === "hing" ? "bg-blue-500/15 text-blue-200" : ""
+                }`}
+              >
+                {content[lang].lang.hing}
+              </button>
+            </div>
+
+            <a
+              href="#contact"
+              className="rounded-full bg-blue-500 px-4 py-1.5 text-xs font-semibold text-slate-950 shadow-lg shadow-blue-500/30 hover:bg-blue-400"
+            >
+              {content[lang].nav.connect}
+            </a>
+          </div>
         </div>
       </header>
 
@@ -84,34 +112,36 @@ export default function Home() {
         <section className="grid gap-10 md:grid-cols-2 md:items-center">
           <div className="space-y-6">
             <p className="inline rounded-full border border-blue-500/30 bg-blue-500/10 px-3 py-1 text-xs font-medium text-blue-200">
-              Himachal Pradesh · Preschool & Primary · NEP 2020
+              {content[lang].hero.badge}
             </p>
+
             <h1 className="text-3xl font-semibold tracking-tight text-slate-50 md:text-4xl lg:text-5xl">
-              Reimagining rural education through{" "}
+              {content[lang].hero.title}{" "}
               <span className="bg-gradient-to-r from-blue-400 to-cyan-300 bg-clip-text text-transparent">
-                creativity, care and culture.
+                {content[lang].hero.highlight}
               </span>
             </h1>
+
             <p className="max-w-xl text-sm leading-relaxed text-slate-300 md:text-base">
-              DurlabhCLAP Foundation (DCF) works with preschool and primary
-              children in rural Himachal Pradesh to strengthen their early
-              learning foundation through arts-based, joyful and culturally
-              rooted education.
+              {content[lang].hero.description}
             </p>
+
             <div className="flex flex-wrap items-center gap-3">
               <Link
                 href="/journey"
                 className="rounded-full bg-blue-500 px-5 py-2 text-sm font-semibold text-slate-950 shadow-lg shadow-blue-500/30 hover:bg-blue-400"
               >
-                Explore our journey
+                {content[lang].hero.primaryCta}
               </Link>
+
               <a
                 href="#programs"
                 className="text-sm font-medium text-slate-200 underline-offset-4 hover:underline"
               >
-                See what we do
+                {content[lang].hero.secondaryCta}
               </a>
             </div>
+
             {/* Stats */}
             <div className="mt-4 grid grid-cols-3 gap-3 max-w-md">
               {stats.map((stat) => (
@@ -131,8 +161,6 @@ export default function Home() {
           {/* HERO MEDIA: GIF / VIDEO SLOT */}
           <div className="relative">
             <div className="relative overflow-hidden rounded-3xl border border-slate-800 bg-slate-900/60 shadow-xl shadow-blue-500/10">
-              {/* TODO: Replace this with your GIF or looping video from the centre */}
-             
               <div className="relative aspect-[4/3] w-full">
                 <Image
                   src="/hero-loop.gif"
@@ -141,15 +169,12 @@ export default function Home() {
                   className="object-cover"
                 />
               </div>
-
             </div>
+
             {/* Floating mini-card */}
             <div className="absolute -bottom-5 left-4 w-[72%] rounded-2xl border border-blue-500/30 bg-slate-950/90 px-4 py-3 text-xs text-slate-200 shadow-lg shadow-blue-500/30 backdrop-blur">
-              “Hamare gaon mein pehli baar aisa khel-khel mein padhne wala
-              jagah bana.” —{" "}
-              <span className="font-semibold">
-                Parent from Shahpur, Kangra
-              </span>
+              {content[lang].hero.quote} —{" "}
+              <span className="font-semibold">{content[lang].hero.quoteFrom}</span>
             </div>
           </div>
         </section>
@@ -157,36 +182,34 @@ export default function Home() {
         {/* IMPACT SECTION */}
         <section id="impact" className="mt-16 space-y-6">
           <h2 className="text-xl font-semibold text-slate-50 md:text-2xl">
-            Starting strong, staying curious.
+            {content[lang].impact.title}
           </h2>
+
           <p className="max-w-2xl text-sm text-slate-300 md:text-[15px]">
-            Our work focuses on children who are just beginning their academic
-            journey. We want their first experience of “school” to be full of
-            curiosity, safety and joy — not fear or pressure. At our Dhanotu
-            centre in Shahpur (Kangra), we worked with children from different
-            family backgrounds, dialects and mother tongues, and saw how arts
-            and play helped them open up to learning.
+            {content[lang].impact.paragraph}
           </p>
+
           <div className="grid gap-4 md:grid-cols-3">
             <ImpactCard
-              title="Joyful first classrooms"
-              body="For many children, DCF was their first learning space. We focused on warmth, interaction and trust before textbooks."
+              title={content[lang].impact.cards[0].title}
+              body={content[lang].impact.cards[0].body}
             />
             <ImpactCard
-              title="Languages & dialects respected"
-              body="Children came with different dialects and mother tongues. We treated this as a strength, not a barrier."
+              title={content[lang].impact.cards[1].title}
+              body={content[lang].impact.cards[1].body}
             />
             <ImpactCard
-              title="Aligned with NEP 2020"
-              body="Our approach reflects the spirit of NEP 2020 – experiential, creative and rooted in the child’s context."
+              title={content[lang].impact.cards[2].title}
+              body={content[lang].impact.cards[2].body}
             />
           </div>
+
           <div>
             <Link
               href="/journey"
               className="inline-flex text-xs font-medium text-blue-300 hover:text-blue-200"
             >
-              Read the full story of our pilot in Himachal →
+              {content[lang].impact.readMore}
             </Link>
           </div>
         </section>
@@ -194,8 +217,9 @@ export default function Home() {
         {/* PROGRAMS SECTION */}
         <section id="programs" className="mt-16 space-y-6">
           <h2 className="text-xl font-semibold text-slate-50 md:text-2xl">
-            What we focus on with children.
+            {content[lang].programs.title}
           </h2>
+
           <div className="grid gap-4 md:grid-cols-3">
             {programs.map((program) => (
               <div
@@ -210,8 +234,9 @@ export default function Home() {
                     {program.description}
                   </p>
                 </div>
+
                 <span className="mt-4 inline-flex text-[11px] font-medium text-blue-300">
-                  Early years · Ages 4–10
+                  {content[lang].programs.ageTag}
                 </span>
               </div>
             ))}
@@ -226,7 +251,6 @@ export default function Home() {
           <div className="flex justify-center md:justify-start">
             <div className="w-full max-w-xs rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
               <div className="relative mb-3 h-44 w-full overflow-hidden rounded-xl border border-slate-800 bg-slate-800/60">
-                {/* TODO: Replace placeholder with actual founder photo */}
                 <Image
                   src="/founder-sahil.jpg"
                   alt="Founder - Sahil Dogra"
@@ -234,50 +258,31 @@ export default function Home() {
                   className="object-cover"
                 />
               </div>
-              <p className="text-sm font-semibold text-slate-50">
-                Sahil Dogra
-              </p>
+              <p className="text-sm font-semibold text-slate-50">Sahil Dogra</p>
               <p className="text-[11px] text-slate-400">
                 Founder, DurlabhCLAP Foundation
               </p>
             </div>
           </div>
+
           <div className="space-y-4">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-300">
-              Message from the Founder
+              {content[lang].founder.label}
             </p>
+
             <h2 className="text-xl font-semibold text-slate-50 md:text-2xl">
-              “Education should not silence children. It should give them a
-              voice.”
+              “{content[lang].founder.quote}”
             </h2>
-            <p className="text-sm text-slate-300">
-              Sahil Dogra, Founder of DurlabhCLAP Foundation, grew up in Delhi
-              and has spent a significant part of his journey working closely
-              in rural villages across India. Through his on-ground experiences,
-              he observed how creativity and emotional expression were slowly
-              disappearing from children’s lives – especially in rural
-              education systems dominated by rigid structures.
-            </p>
-            <p className="text-sm text-slate-300">
-              Instead of beginning from a big city, he chose to pilot
-              DurlabhCLAP Foundation from his grassroots in{" "}
-              <span className="font-semibold">
-                Shahpur, Kangra, Himachal Pradesh
-              </span>
-              , where his family roots and social reality are deeply connected.
-            </p>
-            <p className="text-sm text-slate-300">
-              For Sahil, DCF is not just an organisation. It is a long-term
-              mission to restore creativity, confidence and cultural pride in
-              children by integrating arts, empathy and local context into how
-              learning happens in villages.
-            </p>
+
+            <p className="text-sm text-slate-300">{content[lang].founder.p1}</p>
+            <p className="text-sm text-slate-300">{content[lang].founder.p2}</p>
+            <p className="text-sm text-slate-300">{content[lang].founder.p3}</p>
+
             <p className="text-xs text-slate-400">
               —{" "}
               <span className="font-semibold text-slate-200">
-                Sahil Dogra
+                {content[lang].founder.signature}
               </span>
-              , Founder, DurlabhCLAP Foundation
             </p>
           </div>
         </section>
@@ -290,14 +295,13 @@ export default function Home() {
           <div className="grid gap-6 md:grid-cols-[2fr,1fr] md:items-center">
             <div>
               <h2 className="text-xl font-semibold text-slate-50 md:text-2xl">
-                Let&apos;s build stronger beginnings together.
+                {content[lang].contact.title}
               </h2>
+
               <p className="mt-3 max-w-xl text-sm text-slate-200">
-                If you&apos;re a parent, educator, institution or someone who
-                cares about early childhood education, we would love to
-                connect. Together, we can make the first experiences of school
-                joyful for many more children.
+                {content[lang].contact.paragraph}
               </p>
+
               <div className="mt-4 space-y-1 text-sm text-slate-200">
                 <p>
                   Email:{" "}
@@ -308,8 +312,12 @@ export default function Home() {
                     contact@durlabhclapfoundation.org
                   </a>
                 </p>
-                <p>Location: Shahpur, Kangra, Himachal Pradesh, India</p>
+                <p>
+                  {content[lang].contact.locationLabel}: Shahpur, Kangra, Himachal
+                  Pradesh, India
+                </p>
               </div>
+
               <div className="mt-4 flex flex-wrap gap-3 text-xs text-slate-300">
                 <a
                   href="https://www.instagram.com/durlabhclapfoundation/"
@@ -336,16 +344,16 @@ export default function Home() {
                   YouTube
                 </a>
               </div>
-
             </div>
+
             <div className="rounded-2xl border border-slate-800 bg-slate-950/80 p-4 text-xs text-slate-300">
               <p className="font-semibold text-slate-100">
-                What we are looking for:
+                {content[lang].contact.lookingForTitle}
               </p>
               <ul className="mt-2 space-y-1.5">
-                <li>• Partners for early learning interventions</li>
-                <li>• Support for arts-based curriculum development</li>
-                <li>• Fellows and volunteers from local communities</li>
+                {content[lang].contact.lookingFor.map((x) => (
+                  <li key={x}>• {x}</li>
+                ))}
               </ul>
             </div>
           </div>
@@ -355,9 +363,11 @@ export default function Home() {
       {/* FOOTER */}
       <footer className="border-t border-slate-800 bg-slate-950 py-6">
         <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 text-xs text-slate-400 md:flex-row md:items-center md:justify-between">
-          <p>© {currentYear} DurlabhCLAP Foundation. All rights reserved.</p>
+          <p>
+            © {currentYear} DurlabhCLAP Foundation. {content[lang].contact.rights}
+          </p>
           <div className="flex flex-wrap gap-4">
-            <span>Based in Himachal Pradesh, India</span>
+            <span>{content[lang].contact.basedIn}</span>
             <a
               href="mailto:contact@durlabhclapfoundation.org"
               className="hover:text-blue-300"
