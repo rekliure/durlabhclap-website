@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import BackgroundFX from "../components/BackgroundFX";
 import SiteHeader from "../components/SiteHeader";
 import Reveal from "../components/Reveal";
+import AtmosCanvas from "../components/AtmosCanvas";
 import { useLang } from "../components/LanguageProvider";
 import { content } from "../../src/data/lang";
 
@@ -39,6 +40,13 @@ function prefersReducedMotion() {
 
 function easeInOutCubic(x: number) {
   return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+}
+
+function keySeed(k: string) {
+  // stable seed from string
+  let s = 0;
+  for (let i = 0; i < k.length; i++) s += k.charCodeAt(i) * (i + 1);
+  return s || 7;
 }
 
 export default function JourneyPage() {
@@ -315,7 +323,10 @@ export default function JourneyPage() {
 
   const [, force] = useState(0);
 
-  const activeTheme = useMemo(() => stages.find((s) => s.key === active)?.theme ?? stages[0].theme, [stages, active]);
+  const activeTheme = useMemo(
+    () => stages.find((s) => s.key === active)?.theme ?? stages[0].theme,
+    [stages, active]
+  );
 
   const jumpTo = (key: StageKey) => {
     const el = sectionRefs.current[key];
@@ -394,7 +405,7 @@ export default function JourneyPage() {
         />
       </div>
 
-      {/* LEFT DOCK (smaller + more transparent) */}
+      {/* LEFT DOCK */}
       <div className="hidden lg:block">
         <nav className="fixed left-4 top-[calc(var(--siteHeaderH,110px)+22px)] z-[70] w-[156px]">
           <div className="rounded-3xl border border-[rgb(var(--border))] bg-[rgb(var(--bg)/0.34)] p-2 backdrop-blur-md shadow-[0_14px_55px_rgba(0,0,0,0.22)]">
@@ -518,15 +529,19 @@ export default function JourneyPage() {
                 }}
                 className="relative"
               >
-                {/* soft crossfade “veil” so boundaries feel fluid (not boxed) */}
-                <div className="pointer-events-none absolute -inset-6 md:-inset-10 -z-10 opacity-[0.75]">
+                {/* softer “veil” behind canvas so boundaries dissolve */}
+                <div className="pointer-events-none absolute -inset-6 md:-inset-10 -z-20 opacity-[0.75]">
                   <div
                     className="absolute inset-0 rounded-[44px] blur-2xl transition-opacity duration-500"
                     style={{ backgroundImage: s.theme.bg, opacity: active === s.key ? 1 : 0.40 }}
                   />
                 </div>
 
-                <div className="grid gap-6 md:grid-cols-12">
+                {/* NEW: Premium atmospheric canvas per stage */}
+                <AtmosCanvas mode="journey" seed={keySeed(s.key)} className="-z-10 opacity-[0.92]" />
+
+                {/* content sits above */}
+                <div className="relative z-10 grid gap-6 md:grid-cols-12">
                   <div className="md:col-span-7">
                     <Reveal>
                       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[rgb(var(--accent2))]">
@@ -716,7 +731,6 @@ export default function JourneyPage() {
           })}
         </div>
 
-        {/* footer (no duplicate contact here) */}
         <footer className="mt-14 pb-8">
           <div className="flex flex-col gap-2 text-xs text-[rgb(var(--muted))] md:flex-row md:items-center md:justify-between">
             <p>© {new Date().getFullYear()} DurlabhCLAP Foundation. {content[lang].contact.rights}</p>
@@ -725,7 +739,6 @@ export default function JourneyPage() {
         </footer>
       </main>
 
-      {/* premium hover + bird animations + reduced motion safe */}
       <style jsx global>{`
         .stageCard {
           transition: transform 220ms ease, border-color 220ms ease, box-shadow 220ms ease, background 220ms ease;
@@ -737,18 +750,19 @@ export default function JourneyPage() {
           background: rgb(var(--surface) / 0.50);
         }
 
+        /* FIXED: scale + per-bird opacity works with animated transform */
         @keyframes birdLTR {
-          0%   { transform: translateX(-18vw) translateY(0px); opacity: 0; }
-          10%  { opacity: 0.9; }
-          50%  { transform: translateX(50vw) translateY(var(--bWiggle, -10px)); opacity: 0.95; }
-          100% { transform: translateX(120vw) translateY(calc(var(--bWiggle, -10px) * -1)); opacity: 0; }
+          0%   { transform: translateX(-18vw) translateY(0px) scale(var(--bScale, 1)); opacity: 0; }
+          10%  { opacity: var(--bOpacity, 0.6); }
+          50%  { transform: translateX(50vw) translateY(var(--bWiggle, -10px)) scale(var(--bScale, 1)); opacity: var(--bOpacity, 0.6); }
+          100% { transform: translateX(120vw) translateY(calc(var(--bWiggle, -10px) * -1)) scale(var(--bScale, 1)); opacity: 0; }
         }
 
         @keyframes birdRTL {
-          0%   { transform: translateX(120vw) translateY(0px); opacity: 0; }
-          10%  { opacity: 0.9; }
-          50%  { transform: translateX(50vw) translateY(var(--bWiggle, 10px)); opacity: 0.95; }
-          100% { transform: translateX(-18vw) translateY(calc(var(--bWiggle, 10px) * -1)); opacity: 0; }
+          0%   { transform: translateX(120vw) translateY(0px) scale(var(--bScale, 1)); opacity: 0; }
+          10%  { opacity: var(--bOpacity, 0.6); }
+          50%  { transform: translateX(50vw) translateY(var(--bWiggle, 10px)) scale(var(--bScale, 1)); opacity: var(--bOpacity, 0.6); }
+          100% { transform: translateX(-18vw) translateY(calc(var(--bWiggle, 10px) * -1)) scale(var(--bScale, 1)); opacity: 0; }
         }
 
         .bird {
@@ -798,9 +812,9 @@ function BirdField() {
               top: b.top,
               ["--bDur" as any]: b.dur,
               ["--bWiggle" as any]: b.wiggle,
+              ["--bScale" as any]: b.scale,
+              ["--bOpacity" as any]: b.opacity,
               animationDelay: b.delay,
-              opacity: b.opacity,
-              transform: `scale(${b.scale})`,
             } as any
           }
         >
@@ -812,10 +826,8 @@ function BirdField() {
 }
 
 function BirdWithTrail() {
-  // uses currentColor so it adapts to light/dark automatically
   return (
     <svg width="220" height="70" viewBox="0 0 220 70" fill="none" aria-hidden style={{ color: "rgb(var(--fg))" }}>
-      {/* trail */}
       <path
         d="M10 40 C40 20, 72 22, 96 32 C120 42, 150 45, 208 26"
         stroke="currentColor"
@@ -824,7 +836,6 @@ function BirdWithTrail() {
         strokeDasharray="6 8"
         strokeLinecap="round"
       />
-      {/* birds (simple V strokes) */}
       <path d="M108 34 C114 28, 120 28, 126 34" stroke="currentColor" opacity="0.30" strokeWidth="2.2" strokeLinecap="round" />
       <path d="M136 30 C142 24, 148 24, 154 30" stroke="currentColor" opacity="0.22" strokeWidth="2.1" strokeLinecap="round" />
       <path d="M92 30 C98 24, 104 24, 110 30" stroke="currentColor" opacity="0.20" strokeWidth="2" strokeLinecap="round" />
@@ -890,16 +901,8 @@ function StageGlyph({ stage }: { stage: StageKey }) {
    ============================ */
 
 type MorphProfile = {
-  // harmonic amplitudes (stage identity)
-  a1: number;
-  a2: number;
-  a3: number;
-  a4: number;
-  // base radii + axis scaling
-  r: number;
-  sx: number;
-  sy: number;
-  // symmetry hint (butterfly)
+  a1: number; a2: number; a3: number; a4: number;
+  r: number; sx: number; sy: number;
   mirror: boolean;
 };
 
@@ -928,7 +931,7 @@ function EvolutionMorph({ stage, p, ink }: { stage: StageKey; p: number; ink: st
   }, [reduce]);
 
   const prof = PROFILES[stage];
-  const alpha = reduce ? 1 : p; // morph intensity for this stage
+  const alpha = reduce ? 1 : p;
   const time = reduce ? 0 : tick * 0.012;
 
   const blobPath = useMemo(() => {
@@ -941,8 +944,6 @@ function EvolutionMorph({ stage, p, ink }: { stage: StageKey; p: number; ink: st
 
     for (let i = 0; i < n; i++) {
       const theta = (i / n) * Math.PI * 2;
-
-      // stage personality via harmonics; alpha brings it in from a calmer base
       const base = 1 + 0.03 * Math.sin(theta * 1 + time * 0.8);
       const harm =
         prof.a1 * Math.sin(theta * 1 + time * 0.9) +
@@ -952,7 +953,6 @@ function EvolutionMorph({ stage, p, ink }: { stage: StageKey; p: number; ink: st
 
       let r = prof.r * (base + alpha * harm);
 
-      // butterfly: mirror symmetry feel (left/right wings)
       if (prof.mirror) {
         const s = Math.sin(theta);
         const m = 1 + alpha * 0.18 * Math.abs(s);
@@ -962,7 +962,7 @@ function EvolutionMorph({ stage, p, ink }: { stage: StageKey; p: number; ink: st
       const rx = r * lerp(1, prof.sx, alpha);
       const ry = r * lerp(1, prof.sy, alpha);
 
-      const j = 1 + (reduce ? 0 : (w(i * 0.9) - 0.5) * 0.03); // micro life
+      const j = 1 + (reduce ? 0 : (w(i * 0.9) - 0.5) * 0.03);
       pts.push({
         x: cx + Math.cos(theta) * rx * j,
         y: cy + Math.sin(theta) * ry * j,
@@ -985,7 +985,6 @@ function EvolutionMorph({ stage, p, ink }: { stage: StageKey; p: number; ink: st
       />
 
       <svg viewBox="0 0 520 300" className="h-[290px] w-full" style={{ display: "block" }} aria-hidden>
-        {/* soft trail/swoosh line */}
         <path
           d="M32 248 C130 210, 170 205, 230 170 C290 136, 362 122, 488 70"
           stroke={strokeColor}
@@ -996,7 +995,6 @@ function EvolutionMorph({ stage, p, ink }: { stage: StageKey; p: number; ink: st
           strokeDasharray="8 10"
         />
 
-        {/* morphing blob */}
         <path
           d={blobPath}
           fill={ink}
@@ -1006,7 +1004,6 @@ function EvolutionMorph({ stage, p, ink }: { stage: StageKey; p: number; ink: st
           strokeWidth={2.2}
         />
 
-        {/* stage glyph inside blob */}
         <g transform="translate(0,0)" style={{ color: strokeColor }}>
           {stage === "egg" && <InnerEggs />}
           {stage === "larva" && <InnerLarvae />}
@@ -1024,9 +1021,6 @@ function lerp(a: number, b: number, t: number) {
   return a + (b - a) * t;
 }
 
-/**
- * Creates a smooth closed path through points using Catmull-Rom -> cubic Bezier conversion.
- */
 function closedCatmullRomPath(pts: Array<{ x: number; y: number }>) {
   const n = pts.length;
   if (n < 2) return "";
@@ -1040,7 +1034,6 @@ function closedCatmullRomPath(pts: Array<{ x: number; y: number }>) {
     const p2 = p(i + 1);
     const p3 = p(i + 2);
 
-    // Catmull-Rom to Bezier
     const c1x = p1.x + (p2.x - p0.x) / 6;
     const c1y = p1.y + (p2.y - p0.y) / 6;
     const c2x = p2.x - (p3.x - p1.x) / 6;
@@ -1053,7 +1046,6 @@ function closedCatmullRomPath(pts: Array<{ x: number; y: number }>) {
   return d;
 }
 
-/* inner motifs (tiny, clean) */
 function InnerEggs() {
   const stroke = "currentColor";
   return (

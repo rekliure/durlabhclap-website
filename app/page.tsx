@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import BackgroundFX from "./components/BackgroundFX";
 import SiteHeader from "./components/SiteHeader";
 import Reveal from "./components/Reveal";
+import AtmosCanvas from "./components/AtmosCanvas";
 import { content } from "../src/data/lang";
 import { useLang } from "./components/LanguageProvider";
 
@@ -117,7 +118,6 @@ export default function Home() {
       "Joyful & culturally rooted",
       ...stats.map((s) => `${s.value} · ${s.label}`),
     ];
-    // remove duplicates
     return Array.from(new Set(arr));
   }, [lang, stats]);
 
@@ -188,7 +188,10 @@ export default function Home() {
               </div>
 
               <div className="flex flex-wrap items-center gap-3 pt-2">
-                <Link href="/journey" className="btnMagnetic rounded-full bg-[rgb(var(--accent))] px-5 py-2.5 text-sm font-semibold text-[rgb(var(--bg))] shadow-lg">
+                <Link
+                  href="/journey"
+                  className="btnMagnetic rounded-full bg-[rgb(var(--accent))] px-5 py-2.5 text-sm font-semibold text-[rgb(var(--bg))] shadow-lg"
+                >
                   {c.hero.primaryCta}
                 </Link>
 
@@ -216,9 +219,9 @@ export default function Home() {
 
             <Reveal className="lg:col-span-6 relative" delay={120}>
               <div className="relative overflow-hidden rounded-3xl border border-[rgb(var(--border))] bg-[rgb(var(--surface)/0.55)] shadow-xl">
-                {/* Fluid canvas layer */}
+                {/* NEW premium canvas layer */}
                 <div className="absolute inset-0">
-                  <HeroCanvas />
+                  <AtmosCanvas mode="hero" seed={11} className="opacity-[0.92]" />
                 </div>
 
                 <div className="relative aspect-[4/3] w-full">
@@ -258,7 +261,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* MANIFESTO / WHY WE EXIST (sticky left + right cards) */}
+        {/* MANIFESTO / WHY WE EXIST */}
         <section
           data-home="manifesto"
           ref={(el) => {
@@ -273,7 +276,13 @@ export default function Home() {
                   {t("WHY WE EXIST", "WHY WE EXIST", "WHY WE EXIST")}
                 </p>
                 <h2 className="mt-3 text-2xl md:text-3xl font-semibold mysteryHeading">
-                  <span className="mysteryGradient">{t("Protect creators. Make learning joyful.", "Creators ko protect karo. Learning ko joyful banao.", "Creators ko protect karo. Learning ko joyful banao.")}</span>
+                  <span className="mysteryGradient">
+                    {t(
+                      "Protect creators. Make learning joyful.",
+                      "Creators ko protect karo. Learning ko joyful banao.",
+                      "Creators ko protect karo. Learning ko joyful banao."
+                    )}
+                  </span>
                 </h2>
 
                 <p className="mt-4 max-w-xl text-sm text-[rgb(var(--fg)/0.78)] md:text-[15px]">
@@ -298,7 +307,10 @@ export default function Home() {
                 </div>
 
                 <div className="mt-5 flex flex-wrap gap-3">
-                  <Link href="/journey" className="btnMagnetic rounded-full border border-[rgb(var(--accent)/0.35)] bg-[rgb(var(--accent)/0.12)] px-4 py-2 text-xs font-semibold text-[rgb(var(--accent2))]">
+                  <Link
+                    href="/journey"
+                    className="btnMagnetic rounded-full border border-[rgb(var(--accent)/0.35)] bg-[rgb(var(--accent)/0.12)] px-4 py-2 text-xs font-semibold text-[rgb(var(--accent2))]"
+                  >
                     {t("See the Journey →", "Journey देखें →", "Journey dekho →")}
                   </Link>
                   <button
@@ -421,7 +433,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* PROGRAMS (editorial layout) */}
+        {/* PROGRAMS */}
         <section
           id="programs"
           data-home="programs"
@@ -437,7 +449,6 @@ export default function Home() {
           </Reveal>
 
           <div className="mt-6 grid gap-4 lg:grid-cols-12">
-            {/* Featured program */}
             <Reveal className="lg:col-span-7" delay={90}>
               <div className="editorialCard rounded-[28px] border border-[rgb(var(--border))] bg-[rgb(var(--surface)/0.55)] p-6 overflow-hidden">
                 <div className="editorialGlow" />
@@ -472,7 +483,6 @@ export default function Home() {
               </div>
             </Reveal>
 
-            {/* Side programs */}
             <div className="lg:col-span-5 grid gap-4">
               {programs.slice(1).map((program, i) => (
                 <Reveal key={program.title} delay={130 + i * 80}>
@@ -488,7 +498,6 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Journey teaser panel */}
           <Reveal delay={260}>
             <div className="mt-10 rounded-[28px] border border-[rgb(var(--accent)/0.35)] bg-[rgb(var(--bg)/0.62)] p-6 md:p-8 backdrop-blur">
               <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -504,7 +513,10 @@ export default function Home() {
                     )}
                   </p>
                 </div>
-                <Link href="/journey" className="btnMagnetic inline-flex justify-center rounded-full bg-[rgb(var(--accent))] px-5 py-2.5 text-sm font-semibold text-[rgb(var(--bg))] shadow-lg">
+                <Link
+                  href="/journey"
+                  className="btnMagnetic inline-flex justify-center rounded-full bg-[rgb(var(--accent))] px-5 py-2.5 text-sm font-semibold text-[rgb(var(--bg))] shadow-lg"
+                >
                   {t("Open Journey →", "Journey खोलो →", "Open Journey →")}
                 </Link>
               </div>
@@ -638,6 +650,7 @@ export default function Home() {
         </section>
       </main>
 
+      {/* Footer: removed duplicate email (contact already shows it) */}
       <footer className="border-t border-[rgb(var(--border))] bg-[rgb(var(--bg))] py-6">
         <div className="mx-auto w-full max-w-[1400px] px-4 sm:px-6 lg:px-10 flex flex-col gap-3 text-xs text-[rgb(var(--muted))] md:flex-row md:items-center md:justify-between">
           <p>
@@ -645,9 +658,6 @@ export default function Home() {
           </p>
           <div className="flex flex-wrap gap-4">
             <span>{c.contact.basedIn}</span>
-            <a href="mailto:contact@durlabhclapfoundation.org" className="hover:text-[rgb(var(--accent2))]">
-              contact@durlabhclapfoundation.org
-            </a>
           </div>
         </div>
       </footer>
@@ -746,122 +756,4 @@ function ManifestoCard({ num, title, body }: { num: string; title: string; body:
       <p className="mt-3 text-sm text-[rgb(var(--fg)/0.82)]">{body}</p>
     </div>
   );
-}
-
-/**
- * Canvas “fluid” layer (no libs) — premium vibe without WebGL dependency.
- * Later we can swap to real WebGL shader if you want.
- */
-function HeroCanvas() {
-  const ref = useRef<HTMLCanvasElement | null>(null);
-  const mouse = useRef({ x: 0.5, y: 0.5, vx: 0, vy: 0 });
-
-  useEffect(() => {
-    const canvas = ref.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d", { alpha: true });
-    if (!ctx) return;
-
-    const reduce =
-      typeof window !== "undefined" &&
-      window.matchMedia &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-    let raf = 0;
-    let t = 0;
-
-    const resize = () => {
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      const { width, height } = canvas.getBoundingClientRect();
-      canvas.width = Math.max(1, Math.floor(width * dpr));
-      canvas.height = Math.max(1, Math.floor(height * dpr));
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    };
-
-    const onMove = (e: MouseEvent) => {
-      const r = canvas.getBoundingClientRect();
-      const nx = (e.clientX - r.left) / Math.max(1, r.width);
-      const ny = (e.clientY - r.top) / Math.max(1, r.height);
-      mouse.current.vx = (nx - mouse.current.x) * 0.12;
-      mouse.current.vy = (ny - mouse.current.y) * 0.12;
-      mouse.current.x = nx;
-      mouse.current.y = ny;
-    };
-
-    const draw = () => {
-      const { width, height } = canvas.getBoundingClientRect();
-      ctx.clearRect(0, 0, width, height);
-
-      mouse.current.vx *= 0.92;
-      mouse.current.vy *= 0.92;
-
-      const mx = mouse.current.x * width;
-      const my = mouse.current.y * height;
-
-      const g1 = ctx.createRadialGradient(mx, my, 20, mx, my, Math.max(width, height) * 0.8);
-      g1.addColorStop(0, "rgba(34,211,238,0.20)");
-      g1.addColorStop(0.45, "rgba(34,211,238,0.06)");
-      g1.addColorStop(1, "rgba(0,0,0,0)");
-
-      const g2 = ctx.createRadialGradient(width * 0.86, height * 0.72, 30, width * 0.86, height * 0.72, Math.max(width, height) * 0.85);
-      g2.addColorStop(0, "rgba(251,113,133,0.14)");
-      g2.addColorStop(0.5, "rgba(251,113,133,0.05)");
-      g2.addColorStop(1, "rgba(0,0,0,0)");
-
-      ctx.fillStyle = g1;
-      ctx.fillRect(0, 0, width, height);
-      ctx.fillStyle = g2;
-      ctx.fillRect(0, 0, width, height);
-
-      const lines = 26;
-      const amp = 18;
-      const speed = reduce ? 0 : 0.018;
-
-      for (let i = 0; i < lines; i++) {
-        const y = (i / (lines - 1)) * height;
-        const phase = t * speed + i * 0.22;
-        const wob = Math.sin(phase) * amp + mouse.current.vx * 55;
-
-        ctx.beginPath();
-        const a = 0.08 + i * 0.012;
-        ctx.strokeStyle = `rgba(255,255,255,${a})`;
-        ctx.lineWidth = 1;
-
-        for (let x = -20; x <= width + 20; x += 18) {
-          const k = x / width;
-          const wave =
-            Math.sin(k * 6 + phase) * amp +
-            Math.cos(k * 3.6 - phase * 1.15) * (amp * 0.55) +
-            (mouse.current.y - 0.5) * 22;
-
-          const yy = y + wave + wob * 0.08;
-          if (x === -20) ctx.moveTo(x, yy);
-          else ctx.lineTo(x, yy);
-        }
-        ctx.stroke();
-      }
-
-      const vg = ctx.createRadialGradient(width * 0.5, height * 0.4, 20, width * 0.5, height * 0.4, Math.max(width, height));
-      vg.addColorStop(0, "rgba(0,0,0,0)");
-      vg.addColorStop(1, "rgba(0,0,0,0.22)");
-      ctx.fillStyle = vg;
-      ctx.fillRect(0, 0, width, height);
-
-      if (!reduce) t += 1;
-      raf = requestAnimationFrame(draw);
-    };
-
-    resize();
-    window.addEventListener("resize", resize);
-    window.addEventListener("mousemove", onMove, { passive: true });
-    raf = requestAnimationFrame(draw);
-
-    return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener("resize", resize);
-      window.removeEventListener("mousemove", onMove as any);
-    };
-  }, []);
-
-  return <canvas ref={ref} className="h-full w-full" aria-hidden />;
 }
