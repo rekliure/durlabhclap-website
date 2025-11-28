@@ -328,6 +328,46 @@ export default function JourneyPage() {
 
   const [, force] = useState(0);
 
+  // ✅ FIX: stable reduce-motion flag (computed once)
+  const reduce = useMemo(() => prefersReducedMotion(), []);
+
+  const [dockCollapsed, setDockCollapsed] = useState(false);
+  const lastY = useRef(0);
+
+  // ✅ FIX: better auto-collapse behavior (works even if reduce-motion is ON)
+  useEffect(() => {
+    let raf = 0;
+
+    const onScroll = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        const y = window.scrollY || 0;
+
+        // start collapsing only after some scroll so it’s noticeable + not jittery
+        const hasStarted = y > 140;
+
+        const dy = y - lastY.current;
+        if (Math.abs(dy) < 10) return;
+
+        if (!hasStarted) {
+          setDockCollapsed(false);
+        } else {
+          if (dy > 0) setDockCollapsed(true); // down = collapse
+          else setDockCollapsed(false); // up = expand
+        }
+
+        lastY.current = y;
+      });
+    };
+
+    lastY.current = window.scrollY || 0;
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("scroll", onScroll as any);
+    };
+  }, []);
+
   const activeTheme = useMemo(
     () => stages.find((s) => s.key === active)?.theme ?? stages[0].theme,
     [stages, active]
@@ -410,57 +450,15 @@ export default function JourneyPage() {
         />
       </div>
 
-      {/* LEFT DOCK */}
-      <div className="hidden lg:block">
-        <nav className="fixed left-4 top-[calc(var(--siteHeaderH,110px)+22px)] z-[70] w-[156px]">
-          <div className="rounded-3xl border border-[rgb(var(--border))] bg-[rgb(var(--bg)/0.34)] p-2 backdrop-blur-md shadow-[0_14px_55px_rgba(0,0,0,0.22)]">
-            <p className="px-2 pt-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[rgb(var(--accent2))] opacity-85">
-              {t("Journey map", "Journey map", "Journey map")}
-            </p>
-
-            <div className="mt-2 space-y-1">
-              {stages.map((s) => (
-                <button
-                  key={s.key}
-                  type="button"
-                  onClick={() => jumpTo(s.key)}
-                  className={[
-                    "group w-full text-left rounded-2xl px-2 py-2 transition",
-                    "border border-transparent hover:border-[rgb(var(--accent)/0.20)]",
-                    "hover:bg-[rgb(var(--surface)/0.28)]",
-                    active === s.key ? "bg-[rgb(var(--surface)/0.32)] border-[rgb(var(--accent)/0.22)]" : "",
-                  ].join(" ")}
-                >
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={[
-                        "inline-flex h-7 w-7 items-center justify-center rounded-xl border",
-                        "border-[rgb(var(--border))] bg-[rgb(var(--surface)/0.18)]",
-                        "group-hover:border-[rgb(var(--accent)/0.28)]",
-                        active === s.key ? "border-[rgb(var(--accent)/0.30)]" : "",
-                      ].join(" ")}
-                      aria-hidden
-                    >
-                      <StageGlyph stage={s.key} />
-                    </span>
-
-                    <div className="min-w-0">
-                      <p className="text-[11px] font-semibold text-[rgb(var(--fg))] truncate">{s.label}</p>
-                      <p className="text-[10px] text-[rgb(var(--muted))] truncate opacity-85">{s.kicker}</p>
-                    </div>
-                  </div>
-                </button>
-              ))}
-            </div>
-
-            <div className="mt-2 px-2 pb-1">
-              <Link href="/" className="inline-flex text-[11px] font-semibold text-[rgb(var(--accent2))] hover:opacity-90 transition">
-                {t("← Back", "← Back", "← Back")}
-              </Link>
-            </div>
-          </div>
-        </nav>
-      </div>
+      {/* DOCK (desktop left) + (mobile bottom) */}
+      <JourneyDock
+        stages={stages}
+        active={active}
+        collapsed={dockCollapsed}
+        onToggle={() => setDockCollapsed((v) => !v)}
+        jumpTo={jumpTo}
+        t={t}
+      />
 
       {/* MAIN */}
       <main className="mx-auto w-full max-w-[1180px] px-4 sm:px-6 lg:px-10 pb-20">
@@ -541,11 +539,7 @@ export default function JourneyPage() {
                       className="absolute inset-0"
                       style={{ backgroundImage: s.theme.bg, opacity: active === s.key ? 0.85 : 0.55 }}
                     />
-                    <AtmosCanvas
-                      mode="journey"
-                      seed={keySeed(s.key)}
-                      className="absolute inset-0 opacity-[0.75]"
-                    />
+                    <AtmosCanvas mode="journey" seed={keySeed(s.key)} className="absolute inset-0 opacity-[0.75]" />
                     <div className="absolute inset-0 bg-[rgb(var(--bg)/0.32)]" />
                   </div>
 
@@ -645,9 +639,7 @@ export default function JourneyPage() {
                           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[rgb(var(--accent2))]">
                             {t("Why it matters", "Why it matters", "Why it matters")}
                           </p>
-                          <p className="mt-2 text-sm md:text-base text-[rgb(var(--fg)/0.78)]">
-                            {s.significance}
-                          </p>
+                          <p className="mt-2 text-sm md:text-base text-[rgb(var(--fg)/0.78)]">{s.significance}</p>
 
                           <div className="mt-4 flex flex-wrap gap-2">
                             {stages
@@ -796,6 +788,40 @@ export default function JourneyPage() {
           .stageCard { transition: none !important; }
           .stageCard:hover { transform: none !important; }
           .bird { animation: none !important; opacity: 0.35; transform: translateX(0) !important; }
+        }
+
+        .dockShell {
+          box-shadow: 0 14px 55px rgba(0,0,0,0.18);
+          transition: background 220ms ease, border-color 220ms ease, box-shadow 220ms ease;
+        }
+        .dockShell:hover {
+          background: rgb(var(--bg) / 0.34);
+          box-shadow: 0 22px 80px rgba(0,0,0,0.22);
+          border-color: rgba(34,211,238,0.22);
+        }
+
+        .dockActiveGlow {
+          background: radial-gradient(220px 90px at 16% 50%, rgba(34,211,238,0.20), rgba(0,0,0,0) 60%),
+                      radial-gradient(220px 90px at 84% 50%, rgba(251,113,133,0.14), rgba(0,0,0,0) 60%);
+          opacity: 0.85;
+          filter: blur(10px);
+          pointer-events: none;
+        }
+
+        .dockNav[data-collapsed="true"] {
+          transform: translateX(-2px);
+          opacity: 0.94;
+        }
+
+        .noScrollbars::-webkit-scrollbar { display: none; }
+        .noScrollbars { -ms-overflow-style: none; scrollbar-width: none; }
+
+        @media (prefers-reduced-motion: reduce) {
+          .dockNav,
+          .dockShell,
+          .dockActiveGlow {
+            transition: none !important;
+          }
         }
       `}</style>
     </div>
@@ -1011,10 +1037,7 @@ function EvolutionMorph({ stage, p, ink }: { stage: StageKey; p: number; ink: st
   const strokeColor = "rgb(var(--fg))";
 
   return (
-    <div
-      className="relative overflow-hidden rounded-2xl border border-[rgb(var(--border))] bg-[rgb(var(--surface)/0.46)]"
-      style={{ minHeight: 280 }}
-    >
+    <div className="relative overflow-hidden rounded-2xl border border-[rgb(var(--border))] bg-[rgb(var(--surface)/0.46)]" style={{ minHeight: 280 }}>
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
@@ -1034,14 +1057,7 @@ function EvolutionMorph({ stage, p, ink }: { stage: StageKey; p: number; ink: st
           strokeDasharray="8 10"
         />
 
-        <path
-          d={blobPath}
-          fill={ink}
-          opacity={0.18}
-          stroke={strokeColor}
-          strokeOpacity={0.18}
-          strokeWidth={2.2}
-        />
+        <path d={blobPath} fill={ink} opacity={0.18} stroke={strokeColor} strokeOpacity={0.18} strokeWidth={2.2} />
 
         <g transform="translate(0,0)" style={{ color: strokeColor }}>
           {stage === "egg" && <InnerEggs />}
@@ -1086,7 +1102,6 @@ function closedCatmullRomPath(pts: Array<{ x: number; y: number }>) {
 }
 
 /* inner motifs */
-
 function InnerEggs() {
   const stroke = "currentColor";
   return (
@@ -1167,6 +1182,146 @@ function InnerSpark() {
       <path d="M250 150 L270 130" fill="none" stroke="currentColor" opacity={0.22} strokeWidth={2.2} strokeLinecap="round" />
       <path d="M270 150 L250 130" fill="none" stroke="currentColor" opacity={0.22} strokeWidth={2.2} strokeLinecap="round" />
       <path d="M260 124 v16" fill="none" stroke="currentColor" opacity={0.16} strokeWidth={2.0} strokeLinecap="round" />
+    </>
+  );
+}
+
+/* ========== UPDATED DOCK ========== */
+function JourneyDock({
+  stages,
+  active,
+  collapsed,
+  onToggle,
+  jumpTo,
+  t,
+}: {
+  stages: Array<{ key: StageKey; label: string; kicker: string }>;
+  active: StageKey;
+  collapsed: boolean;
+  onToggle: () => void;
+  jumpTo: (k: StageKey) => void;
+  t: (en: string, hi: string, hing: string) => string;
+}) {
+  const [hovered, setHovered] = useState(false);
+  useMemo(() => prefersReducedMotion(), []); // computed once (kept for future use)
+
+  const isCollapsed = collapsed && !hovered;
+
+  return (
+    <>
+      {/* Desktop left dock */}
+      <div className="hidden lg:block">
+        <nav
+          data-collapsed={isCollapsed ? "true" : "false"}
+          className={[
+            "dockNav fixed left-4 top-[calc(var(--siteHeaderH,110px)+22px)] z-[70]",
+            isCollapsed ? "w-[72px]" : "w-[190px]",
+            "transition-[width,transform,opacity] duration-300",
+          ].join(" ")}
+          onMouseEnter={() => setHovered(true)}
+          onMouseLeave={() => setHovered(false)}
+          aria-label="Journey navigation"
+        >
+          <div className="dockShell rounded-3xl border border-[rgb(var(--border))] bg-[rgb(var(--bg)/0.28)] backdrop-blur-md overflow-hidden">
+            <div className="flex items-center justify-between gap-2 px-2 pt-2">
+              <p
+                className={[
+                  "px-2 text-[10px] font-semibold uppercase tracking-[0.18em]",
+                  "text-[rgb(var(--accent2))] opacity-85",
+                  isCollapsed ? "hidden" : "block",
+                ].join(" ")}
+              >
+                {t("Journey map", "Journey map", "Journey map")}
+              </p>
+
+              <button
+                type="button"
+                onClick={onToggle}
+                className="rounded-2xl border border-[rgb(var(--border))] bg-[rgb(var(--surface)/0.28)] px-2 py-2 text-[11px] text-[rgb(var(--fg)/0.88)] hover:bg-[rgb(var(--surface)/0.45)] transition"
+                aria-label={isCollapsed ? "Expand dock" : "Collapse dock"}
+                title={isCollapsed ? "Expand" : "Collapse"}
+              >
+                {isCollapsed ? "→" : "←"}
+              </button>
+            </div>
+
+            <div className="mt-2 space-y-1 p-2">
+              {stages.map((s) => {
+                const isActive = active === s.key;
+                return (
+                  <button
+                    key={s.key}
+                    type="button"
+                    onClick={() => jumpTo(s.key)}
+                    className={[
+                      "group w-full text-left rounded-2xl px-2 py-2 transition relative",
+                      "border border-transparent hover:border-[rgb(var(--accent)/0.22)]",
+                      "hover:bg-[rgb(var(--surface)/0.22)]",
+                      isActive ? "bg-[rgb(var(--surface)/0.32)] border-[rgb(var(--accent)/0.26)]" : "",
+                    ].join(" ")}
+                  >
+                    {isActive ? <span className="dockActiveGlow absolute inset-0 rounded-2xl" aria-hidden /> : null}
+
+                    <div className="relative z-10 flex items-center gap-2">
+                      <span
+                        className={[
+                          "inline-flex h-9 w-9 items-center justify-center rounded-2xl border",
+                          "border-[rgb(var(--border))] bg-[rgb(var(--surface)/0.18)]",
+                          "group-hover:border-[rgb(var(--accent)/0.30)]",
+                          isActive ? "border-[rgb(var(--accent)/0.36)]" : "",
+                        ].join(" ")}
+                        aria-hidden
+                      >
+                        <StageGlyph stage={s.key} />
+                      </span>
+
+                      <div className={isCollapsed ? "hidden" : "min-w-0"}>
+                        <p className="text-[11px] font-semibold text-[rgb(var(--fg))] truncate">{s.label}</p>
+                        <p className="text-[10px] text-[rgb(var(--muted))] truncate opacity-85">{s.kicker}</p>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className={`px-2 pb-2 ${isCollapsed ? "hidden" : "block"}`}>
+              <Link href="/" className="inline-flex px-2 py-2 text-[11px] font-semibold text-[rgb(var(--accent2))] hover:opacity-90 transition">
+                {t("← Back", "← Back", "← Back")}
+              </Link>
+            </div>
+          </div>
+        </nav>
+      </div>
+
+      {/* Mobile bottom dock */}
+      <div className="lg:hidden fixed bottom-3 left-0 right-0 z-[70] px-3">
+        <div className="rounded-[22px] border border-[rgb(var(--border))] bg-[rgb(var(--bg)/0.30)] backdrop-blur-md shadow-[0_10px_40px_rgba(0,0,0,0.18)]">
+          <div className="flex items-center gap-2 overflow-x-auto px-2 py-2 noScrollbars">
+            {stages.map((s) => {
+              const isActive = active === s.key;
+              return (
+                <button
+                  key={s.key}
+                  type="button"
+                  onClick={() => jumpTo(s.key)}
+                  className={[
+                    "shrink-0 rounded-2xl border px-3 py-2 text-[11px] transition flex items-center gap-2",
+                    isActive
+                      ? "border-[rgb(var(--accent)/0.36)] bg-[rgb(var(--surface)/0.32)] text-[rgb(var(--fg))]"
+                      : "border-[rgb(var(--border))] bg-[rgb(var(--surface)/0.18)] text-[rgb(var(--fg)/0.86)]",
+                  ].join(" ")}
+                >
+                  <span className="inline-flex h-6 w-6 items-center justify-center rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--surface)/0.12)]">
+                    <StageGlyph stage={s.key} />
+                  </span>
+                  <span className="whitespace-nowrap">{s.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
     </>
   );
 }
