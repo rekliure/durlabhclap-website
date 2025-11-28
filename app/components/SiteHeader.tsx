@@ -7,6 +7,7 @@ import { useLang } from "./LanguageProvider";
 import { content } from "../../src/data/lang";
 import { useTheme, ThemeKey } from "./ThemeProvider";
 
+
 type Variant = "home" | "journey";
 type NavItem = { label: string; href: string; isLink?: boolean };
 
@@ -50,6 +51,8 @@ export default function SiteHeader({ variant }: { variant: Variant }) {
         { label: content[lang].nav.founder, href: "#founder" },
         { label: content[lang].nav.journey, href: "/journey", isLink: true },
         { label: content[lang].nav.contact, href: "#contact" },
+        { label: "Create", href: "/create", isLink: true },
+
       ];
     }
     return [
@@ -57,6 +60,8 @@ export default function SiteHeader({ variant }: { variant: Variant }) {
       { label: content[lang].nav.programs, href: "/#programs", isLink: true },
       { label: content[lang].nav.founder, href: "/#founder", isLink: true },
       { label: content[lang].nav.contact, href: "/#contact", isLink: true },
+      { label: "Create", href: "/create", isLink: true },
+
     ];
   }, [variant, lang]);
 
@@ -129,6 +134,7 @@ export default function SiteHeader({ variant }: { variant: Variant }) {
                     <a key={n.href} href={n.href} className="navItem">
                       {n.label}
                     </a>
+                    
                   )
                 )}
               </nav>
@@ -455,3 +461,4 @@ export default function SiteHeader({ variant }: { variant: Variant }) {
     </>
   );
 }
+
