@@ -2,11 +2,10 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import React, { useLayoutEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useLang } from "./LanguageProvider";
 import { content } from "../../src/data/lang";
 import { useTheme, ThemeKey } from "./ThemeProvider";
-
 
 type Variant = "home" | "journey";
 type NavItem = { label: string; href: string; isLink?: boolean };
@@ -26,7 +25,7 @@ export default function SiteHeader({ variant }: { variant: Variant }) {
 
     const measure = () => {
       const rect = el.getBoundingClientRect();
-      const h = Math.ceil(rect.height) + 14; // breathing room
+      const h = Math.ceil(rect.height) + 14;
       setSpacerH(h);
       document.documentElement.style.setProperty("--siteHeaderH", `${h}px`);
     };
@@ -43,25 +42,26 @@ export default function SiteHeader({ variant }: { variant: Variant }) {
     };
   }, []);
 
+  // Mobile panel nav items
   const nav: NavItem[] = useMemo(() => {
     if (variant === "home") {
+      // Use absolute hash links so they work from ANY route (create/journey/etc)
       return [
-        { label: content[lang].nav.impact, href: "#impact" },
-        { label: content[lang].nav.programs, href: "#programs" },
-        { label: content[lang].nav.founder, href: "#founder" },
+        { label: "Why we exist", href: "/#manifesto", isLink: true },
+        { label: content[lang].nav.impact, href: "/#impact", isLink: true },
+        { label: content[lang].nav.programs, href: "/#programs", isLink: true },
+        { label: content[lang].nav.founder, href: "/#founder", isLink: true },
         { label: content[lang].nav.journey, href: "/journey", isLink: true },
-        { label: content[lang].nav.contact, href: "#contact" },
         { label: "Create", href: "/create", isLink: true },
-
+        { label: content[lang].nav.contact, href: "/#contact", isLink: true },
       ];
     }
     return [
       { label: "Home", href: "/", isLink: true },
       { label: content[lang].nav.programs, href: "/#programs", isLink: true },
       { label: content[lang].nav.founder, href: "/#founder", isLink: true },
-      { label: content[lang].nav.contact, href: "/#contact", isLink: true },
       { label: "Create", href: "/create", isLink: true },
-
+      { label: content[lang].nav.contact, href: "/#contact", isLink: true },
     ];
   }, [variant, lang]);
 
@@ -90,10 +90,8 @@ export default function SiteHeader({ variant }: { variant: Variant }) {
                   className="logoShell relative h-10 w-10 rounded-2xl border border-[rgb(var(--accent)/0.35)] bg-[rgb(var(--surface))] shadow-[0_0_0_1px_rgb(var(--accent)/0.10)] overflow-hidden"
                   aria-hidden
                 >
-                  {/* shimmer ring + glow */}
                   <span className="logoRing" />
                   <span className="logoGlow" />
-                  {/* subtle shine sweep */}
                   <span className="logoShine" />
 
                   <div className="logoFloatV2 relative h-full w-full">
@@ -116,27 +114,32 @@ export default function SiteHeader({ variant }: { variant: Variant }) {
                       ? lang === "hi"
                         ? "हमारी यात्रा · धनोटू · NEP 2020"
                         : lang === "hing"
-                          ? "Journey · Dhanotu · NEP 2020"
-                          : "Our Journey · Dhanotu · NEP 2020"
+                        ? "Journey · Dhanotu · NEP 2020"
+                        : "Our Journey · Dhanotu · NEP 2020"
                       : "Early Learning · Arts · Rural Education"}
                   </p>
                 </div>
               </Link>
 
-              {/* Desktop Nav */}
-              <nav className="hidden lg:flex items-center gap-7 text-sm text-[rgb(var(--fg)/0.78)]">
-                {nav.map((n) =>
-                  n.isLink ? (
-                    <Link key={n.href} href={n.href} className="navItem">
-                      {n.label}
-                    </Link>
-                  ) : (
-                    <a key={n.href} href={n.href} className="navItem">
-                      {n.label}
-                    </a>
-                    
-                  )
-                )}
+              {/* Desktop Nav (fluid) */}
+              <nav className="hidden lg:flex items-center gap-3 text-sm text-[rgb(var(--fg)/0.78)]">
+                <ExploreDropdown
+                  items={[
+                    { label: "Why we exist", href: "/#manifesto" },
+                    { label: content[lang].nav.impact, href: "/#impact" },
+                    { label: content[lang].nav.programs, href: "/#programs" },
+                    { label: content[lang].nav.founder, href: "/#founder" },
+                    { label: content[lang].nav.contact, href: "/#contact" },
+                  ]}
+                />
+
+                <Link href="/journey" className="navItem">
+                  {content[lang].nav.journey}
+                </Link>
+
+                <Link href="/create" className="navItem">
+                  Create
+                </Link>
               </nav>
 
               {/* Controls */}
@@ -164,9 +167,7 @@ export default function SiteHeader({ variant }: { variant: Variant }) {
 
                 {/* Theme select (desktop) */}
                 <div className="hidden sm:flex items-center gap-2 rounded-full border border-[rgb(var(--border))] bg-[rgb(var(--surface)/0.55)] px-3 py-2">
-                  <span className="hidden md:inline text-[11px] text-[rgb(var(--muted))]">
-                    {labels.theme}:
-                  </span>
+                  <span className="hidden md:inline text-[11px] text-[rgb(var(--muted))]">{labels.theme}:</span>
                   <select
                     value={theme}
                     onChange={(e) => setTheme(e.target.value as ThemeKey)}
@@ -213,9 +214,9 @@ export default function SiteHeader({ variant }: { variant: Variant }) {
 
                 {/* CTA */}
                 {variant === "home" ? (
-                  <a href="#contact" className="btnPrimary px-4 py-2 text-xs">
+                  <Link href="/#contact" className="btnPrimary px-4 py-2 text-xs">
                     {content[lang].nav.connect}
-                  </a>
+                  </Link>
                 ) : (
                   <Link href="/" className="btnPrimary px-4 py-2 text-xs">
                     ← Back
@@ -230,21 +231,11 @@ export default function SiteHeader({ variant }: { variant: Variant }) {
                 <div className="pt-3 space-y-2 text-sm text-[rgb(var(--fg)/0.82)]">
                   {nav.map((n) =>
                     n.isLink ? (
-                      <Link
-                        key={n.href}
-                        href={n.href}
-                        className="block navMobile"
-                        onClick={() => setOpen(false)}
-                      >
+                      <Link key={n.href} href={n.href} className="block navMobile" onClick={() => setOpen(false)}>
                         {n.label}
                       </Link>
                     ) : (
-                      <a
-                        key={n.href}
-                        href={n.href}
-                        className="block navMobile"
-                        onClick={() => setOpen(false)}
-                      >
+                      <a key={n.href} href={n.href} className="block navMobile" onClick={() => setOpen(false)}>
                         {n.label}
                       </a>
                     )
@@ -271,9 +262,6 @@ export default function SiteHeader({ variant }: { variant: Variant }) {
         </div>
 
         <style jsx global>{`
-          /* =========================
-             Buttons / Nav (existing)
-             ========================= */
           .btnGhost {
             border-radius: 9999px;
             border: 1px solid rgb(var(--border));
@@ -353,17 +341,11 @@ export default function SiteHeader({ variant }: { variant: Variant }) {
             border-color: rgb(var(--accent) / 0.35);
           }
 
-          /* =========================
-             LOGO: premium animation
-             ========================= */
+          /* LOGO animations */
           .logoShell {
             will-change: transform, box-shadow, filter;
             transform-style: preserve-3d;
             transition: transform 220ms ease, border-color 220ms ease, box-shadow 220ms ease, filter 220ms ease;
-          }
-
-          /* idle breathing */
-          .logoShell {
             animation: logoBreath 6.8s ease-in-out infinite;
           }
           @keyframes logoBreath {
@@ -371,8 +353,6 @@ export default function SiteHeader({ variant }: { variant: Variant }) {
             50% { transform: translateY(-1px) scale(1.01); }
             100% { transform: translateY(0px) scale(1); }
           }
-
-          /* hover tilt + lift */
           .group:hover .logoShell {
             transform: translateY(-2px) rotateX(10deg) rotateY(-12deg) scale(1.03);
             border-color: rgb(var(--accent) / 0.55);
@@ -382,7 +362,6 @@ export default function SiteHeader({ variant }: { variant: Variant }) {
           .group:active .logoShell {
             transform: translateY(-1px) rotateX(6deg) rotateY(-8deg) scale(1.01);
           }
-
           .logoFloatV2 {
             transform: translateZ(20px);
             transition: transform 220ms ease;
@@ -390,8 +369,6 @@ export default function SiteHeader({ variant }: { variant: Variant }) {
           .group:hover .logoFloatV2 {
             transform: translateZ(28px) scale(1.02);
           }
-
-          /* rotating ring */
           .logoRing {
             position: absolute;
             inset: -40%;
@@ -407,11 +384,7 @@ export default function SiteHeader({ variant }: { variant: Variant }) {
             filter: blur(10px);
             animation: ringSpin 7.5s linear infinite;
           }
-          @keyframes ringSpin {
-            to { transform: rotate(360deg); }
-          }
-
-          /* soft inner glow */
+          @keyframes ringSpin { to { transform: rotate(360deg); } }
           .logoGlow {
             position: absolute;
             inset: 0;
@@ -420,8 +393,6 @@ export default function SiteHeader({ variant }: { variant: Variant }) {
             opacity: 0.75;
             pointer-events: none;
           }
-
-          /* shine sweep */
           .logoShine {
             position: absolute;
             inset: -30%;
@@ -445,7 +416,6 @@ export default function SiteHeader({ variant }: { variant: Variant }) {
             to   { transform: translateX(35%) rotate(8deg); }
           }
 
-          /* Reduced motion */
           @media (prefers-reduced-motion: reduce) {
             .logoShell { animation: none !important; }
             .logoRing { animation: none !important; }
@@ -462,3 +432,51 @@ export default function SiteHeader({ variant }: { variant: Variant }) {
   );
 }
 
+function ExploreDropdown({ items }: { items: { label: string; href: string }[] }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const onDown = (e: MouseEvent) => {
+      if (!ref.current) return;
+      if (!ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, []);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="navItem rounded-full border border-[rgb(var(--border))] bg-[rgb(var(--surface)/0.35)] px-3 py-2"
+        aria-expanded={open}
+      >
+        Explore <span className="ml-1 text-[rgb(var(--muted))]">▾</span>
+      </button>
+
+      {open ? (
+        <div className="absolute left-0 top-[44px] w-[260px] rounded-2xl border border-[rgb(var(--border))] bg-[rgb(var(--bg)/0.95)] backdrop-blur-xl shadow-[0_18px_60px_rgba(0,0,0,0.35)] p-2">
+          {items.map((it) => (
+            <Link
+              key={it.href}
+              href={it.href}
+              onClick={() => setOpen(false)}
+              className="block rounded-xl px-3 py-2 text-sm text-[rgb(var(--fg)/0.86)] hover:bg-[rgb(var(--surface)/0.55)] hover:text-[rgb(var(--accent2))] transition"
+            >
+              {it.label}
+            </Link>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
