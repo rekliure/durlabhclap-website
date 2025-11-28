@@ -1,8 +1,27 @@
 @import "tailwindcss";
 
+/* ===========================
+   BASE THEME TOKENS
+   =========================== */
+
+/* Your app mostly uses: rgb(var(--bg)) / rgb(var(--fg)) / --accent / --accent2 / --border / --surface...
+   ThemeProvider can override these. We keep fallbacks here. */
 :root {
+  /* Next/Tailwind demo tokens (ok to keep) */
   --background: #ffffff;
   --foreground: #171717;
+
+  /* App tokens (fallbacks) */
+  --bg: 255 255 255;
+  --fg: 23 23 23;
+  --muted: 120 120 120;
+
+  --surface: 245 245 245;
+  --surface2: 235 235 235;
+  --border: 210 210 210;
+
+  --accent: 34 211 238;   /* cyan */
+  --accent2: 251 113 133; /* pink */
 }
 
 @theme inline {
@@ -12,15 +31,204 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* If user prefers dark AND your ThemeProvider hasn’t overridden yet */
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+
+    --bg: 10 10 10;
+    --fg: 237 237 237;
+    --muted: 160 160 160;
+
+    --surface: 22 22 22;
+    --surface2: 30 30 30;
+    --border: 60 60 60;
   }
 }
 
+/* IMPORTANT: use app tokens so ThemeProvider works everywhere */
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: rgb(var(--bg));
+  color: rgb(var(--fg));
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* ===========================
+   GLOBAL SAFETY (NO CLICK BLOCK)
+   =========================== */
+
+.noiseOverlay,
+.parallaxLayer {
+  pointer-events: none !important;
+}
+
+/* Hide scrollbars nicely */
+.railNoScrollbar::-webkit-scrollbar {
+  display: none;
+}
+.railNoScrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* ===========================
+   NOISE OVERLAY
+   =========================== */
+
+.noiseOverlay {
+  background-image:
+    radial-gradient(circle at 20% 10%, rgba(255,255,255,0.05) 1px, transparent 1px),
+    radial-gradient(circle at 70% 60%, rgba(255,255,255,0.04) 1px, transparent 1px),
+    radial-gradient(circle at 40% 80%, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 140px 140px, 180px 180px, 220px 220px;
+  mix-blend-mode: overlay;
+  filter: contrast(1.2);
+}
+
+/* ===========================
+   BUTTERFLY ANIMATIONS
+   =========================== */
+
+@keyframes flyLeftToRight {
+  0%   { transform: translateX(-18vw) translateY(0px) rotate(-6deg); opacity: 0; }
+  8%   { opacity: 0.95; }
+  48%  { transform: translateX(48vw) translateY(calc(var(--wiggle,10px) * -1)) rotate(8deg); }
+  100% { transform: translateX(115vw) translateY(var(--wiggle,10px)) rotate(-8deg); opacity: 0; }
+}
+
+@keyframes flyRightToLeft {
+  0%   { transform: translateX(115vw) translateY(0px) rotate(6deg); opacity: 0; }
+  8%   { opacity: 0.95; }
+  48%  { transform: translateX(52vw) translateY(var(--wiggle,10px)) rotate(-8deg); }
+  100% { transform: translateX(-18vw) translateY(calc(var(--wiggle,10px) * -1)) rotate(10deg); opacity: 0; }
+}
+
+@keyframes flutter {
+  0%, 100% { transform: rotate(-10deg) scale(1); }
+  50%      { transform: rotate(12deg) scale(1.08); }
+}
+
+.butterflyFlyL {
+  position: absolute;
+  left: -10px;
+  animation-name: flyLeftToRight;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  will-change: transform, opacity;
+}
+
+.butterflyFlyR {
+  position: absolute;
+  left: 0;
+  animation-name: flyRightToLeft;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  will-change: transform, opacity;
+}
+
+.butterflyFlutter {
+  animation: flutter 0.85s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* ===========================
+   PARALLAX DEPTH LAYERS
+   =========================== */
+
+/* Uses vars like --p1x/--p2x/--p3x set by your component if needed */
+.parallaxLayer {
+  opacity: 0.85;
+  transition: transform 80ms linear;
+  will-change: transform;
+}
+
+.parallaxLayer.layerA {
+  transform: translate3d(var(--p1x, 0px), 0, 0);
+  background:
+    radial-gradient(700px 340px at 22% 35%, rgba(255,255,255,0.06), rgba(0,0,0,0) 62%),
+    linear-gradient(90deg, rgba(255,255,255,0.03), rgba(0,0,0,0) 55%);
+  mix-blend-mode: screen;
+}
+
+.parallaxLayer.layerB {
+  transform: translate3d(var(--p2x, 0px), 0, 0);
+  background:
+    radial-gradient(520px 320px at 75% 55%, rgba(var(--accent),0.10), rgba(0,0,0,0) 60%),
+    radial-gradient(560px 380px at 28% 70%, rgba(var(--accent2),0.08), rgba(0,0,0,0) 60%);
+  mix-blend-mode: lighten;
+}
+
+.parallaxLayer.layerC {
+  transform: translate3d(var(--p3x, 0px), 0, 0);
+  background:
+    linear-gradient(115deg, rgba(255,255,255,0.035), rgba(0,0,0,0) 45%),
+    repeating-linear-gradient(12deg, rgba(255,255,255,0.010) 0 2px, rgba(0,0,0,0) 2px 10px);
+  mix-blend-mode: overlay;
+  opacity: 0.55;
+}
+
+/* ===========================
+   STUDENT JOURNEY RUNNER
+   =========================== */
+
+.journeyRunner {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translate(0, -50%);
+  opacity: 0;
+}
+
+@keyframes journeyGo {
+  0%   { left: 0%; opacity: 0; }
+  10%  { opacity: 1; }
+  92%  { opacity: 1; }
+  100% { left: calc(100% - 12px); opacity: 0; }
+}
+
+.journeyRun {
+  animation: journeyGo 4.2s cubic-bezier(.22,1,.36,1) infinite;
+  will-change: left, opacity;
+}
+
+/* ===========================
+   HAND-DRAWN (OPTIONAL)
+   =========================== */
+
+/* Base stroke style */
+.hdStroke {
+  stroke-dasharray: 900;
+  transition: stroke-dashoffset 120ms linear;
+  animation: hdJitter 2.4s ease-in-out infinite;
+}
+
+/* Control via CSS vars (set by component) */
+.hdWord { stroke-dashoffset: calc(900 * var(--pWord, 1)); }
+.hdChar { stroke-dashoffset: calc(900 * var(--pChar, 1)); }
+.hdBg   { stroke-dashoffset: calc(900 * var(--pBg, 1)); }
+
+@keyframes hdJitter {
+  0%, 100% { filter: drop-shadow(0 0 0px rgba(255,255,255,0)); }
+  50% { filter: drop-shadow(0 0 6px rgba(34,211,238,0.20)); }
+}
+
+/* ===========================
+   REDUCED MOTION
+   =========================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .butterflyFlyL,
+  .butterflyFlyR,
+  .butterflyFlutter,
+  .journeyRun,
+  .hdStroke {
+    animation: none !important;
+  }
+  .parallaxLayer {
+    transition: none !important;
+  }
+  .hdStroke {
+    transition: none !important;
+  }
 }
