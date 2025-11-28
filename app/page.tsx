@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import BackgroundFX from "./components/BackgroundFX";
 import SiteHeader from "./components/SiteHeader";
 import Reveal from "./components/Reveal";
+import FocusOnScroll from "./components/FocusOnScroll";
 import { content } from "../src/data/lang";
 import { useLang } from "./components/LanguageProvider";
 
@@ -155,10 +156,13 @@ export default function Home() {
                 {c.hero.badge}
               </p>
 
-              <h1 className="text-3xl font-semibold tracking-tight md:text-5xl mysteryHeading">
-                <span className="softShimmer">{c.hero.title}</span>{" "}
-                <span className="mysteryGradient">{c.hero.highlight}</span>
-              </h1>
+              {/* Focus reveal (start sharp on load) */}
+              <FocusOnScroll className="isFocus">
+                <h1 className="text-3xl font-semibold tracking-tight md:text-5xl mysteryHeading">
+                  <span className="softShimmer">{c.hero.title}</span>{" "}
+                  <span className="mysteryGradient">{c.hero.highlight}</span>
+                </h1>
+              </FocusOnScroll>
 
               <p className="max-w-2xl text-sm leading-relaxed text-[rgb(var(--fg)/0.78)] md:text-base">
                 {c.hero.description}
@@ -265,15 +269,18 @@ export default function Home() {
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[rgb(var(--accent2))]">
                   {t("WHY WE EXIST", "WHY WE EXIST", "WHY WE EXIST")}
                 </p>
-                <h2 className="mt-3 text-2xl md:text-3xl font-semibold mysteryHeading">
-                  <span className="mysteryGradient">
-                    {t(
-                      "Protect creators. Make learning joyful.",
-                      "Creators ko protect karo. Learning ko joyful banao.",
-                      "Creators ko protect karo. Learning ko joyful banao."
-                    )}
-                  </span>
-                </h2>
+
+                <FocusOnScroll>
+                  <h2 className="mt-3 text-2xl md:text-3xl font-semibold mysteryHeading">
+                    <span className="mysteryGradient">
+                      {t(
+                        "Protect creators. Make learning joyful.",
+                        "Creators ko protect karo. Learning ko joyful banao.",
+                        "Creators ko protect karo. Learning ko joyful banao."
+                      )}
+                    </span>
+                  </h2>
+                </FocusOnScroll>
 
                 <p className="mt-4 max-w-xl text-sm text-[rgb(var(--fg)/0.78)] md:text-[15px]">
                   {t(
@@ -364,9 +371,12 @@ export default function Home() {
           <div className="grid gap-10 lg:grid-cols-12 lg:items-start">
             <Reveal className="lg:col-span-5">
               <div className="sticky top-[calc(var(--siteHeaderH,110px)+14px)]">
-                <h2 className="text-2xl font-semibold mysteryHeading">
-                  <span className="mysteryGradient">{c.impact.title}</span>
-                </h2>
+                <FocusOnScroll>
+                  <h2 className="text-2xl font-semibold mysteryHeading">
+                    <span className="mysteryGradient">{c.impact.title}</span>
+                  </h2>
+                </FocusOnScroll>
+
                 <p className="mt-4 max-w-xl text-sm text-[rgb(var(--fg)/0.78)] md:text-[15px]">
                   {c.impact.paragraph}
                 </p>
@@ -431,9 +441,11 @@ export default function Home() {
           className="mt-20"
         >
           <Reveal>
-            <h2 className="text-2xl font-semibold mysteryHeading">
-              <span className="mysteryGradient">{c.programs.title}</span>
-            </h2>
+            <FocusOnScroll>
+              <h2 className="text-2xl font-semibold mysteryHeading">
+                <span className="mysteryGradient">{c.programs.title}</span>
+              </h2>
+            </FocusOnScroll>
           </Reveal>
 
           <div className="mt-6 grid gap-4 lg:grid-cols-12">
@@ -525,9 +537,13 @@ export default function Home() {
 
           <Reveal className="lg:col-span-7 space-y-4" delay={120}>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[rgb(var(--accent2))]">{c.founder.label}</p>
-            <h2 className="text-2xl font-semibold mysteryHeading">
-              “<span className="mysteryGradient">{c.founder.quote}</span>”
-            </h2>
+
+            <FocusOnScroll>
+              <h2 className="text-2xl font-semibold mysteryHeading">
+                “<span className="mysteryGradient">{c.founder.quote}</span>”
+              </h2>
+            </FocusOnScroll>
+
             <p className="text-sm text-[rgb(var(--fg)/0.78)]">{c.founder.p1}</p>
             <p className="text-sm text-[rgb(var(--fg)/0.78)]">{c.founder.p2}</p>
             <p className="text-sm text-[rgb(var(--fg)/0.78)]">{c.founder.p3}</p>
@@ -547,9 +563,11 @@ export default function Home() {
           className="mt-20 rounded-[28px] border border-[rgb(var(--accent)/0.35)] bg-[rgb(var(--bg)/0.60)] px-6 py-8 md:px-8 backdrop-blur"
         >
           <Reveal delay={0}>
-            <h2 className="text-2xl font-semibold mysteryHeading">
-              <span className="mysteryGradient">{c.contact.title}</span>
-            </h2>
+            <FocusOnScroll>
+              <h2 className="text-2xl font-semibold mysteryHeading">
+                <span className="mysteryGradient">{c.contact.title}</span>
+              </h2>
+            </FocusOnScroll>
           </Reveal>
 
           <Reveal delay={90}>

@@ -79,10 +79,18 @@ export default function SiteHeader({ variant }: { variant: Variant }) {
             className="rounded-2xl border border-[rgb(var(--border))] bg-[rgb(var(--bg)/0.94)] backdrop-blur-xl shadow-[0_10px_50px_rgba(0,0,0,0.35)]"
           >
             <div className="flex items-center justify-between gap-4 px-4 py-3">
-              <Link href="/" className="flex items-center gap-3">
+              <Link href="/" className="flex items-center gap-3 group">
                 {/* Logo */}
-                <div className="logoShell relative h-10 w-10 rounded-2xl border border-[rgb(var(--accent)/0.35)] bg-[rgb(var(--surface))] shadow-[0_0_0_1px_rgb(var(--accent)/0.10)] overflow-hidden">
+                <div
+                  className="logoShell relative h-10 w-10 rounded-2xl border border-[rgb(var(--accent)/0.35)] bg-[rgb(var(--surface))] shadow-[0_0_0_1px_rgb(var(--accent)/0.10)] overflow-hidden"
+                  aria-hidden
+                >
+                  {/* shimmer ring + glow */}
                   <span className="logoRing" />
+                  <span className="logoGlow" />
+                  {/* subtle shine sweep */}
+                  <span className="logoShine" />
+
                   <div className="logoFloatV2 relative h-full w-full">
                     <Image
                       src="/dcf-logo.png"
@@ -257,6 +265,9 @@ export default function SiteHeader({ variant }: { variant: Variant }) {
         </div>
 
         <style jsx global>{`
+          /* =========================
+             Buttons / Nav (existing)
+             ========================= */
           .btnGhost {
             border-radius: 9999px;
             border: 1px solid rgb(var(--border));
@@ -334,6 +345,107 @@ export default function SiteHeader({ variant }: { variant: Variant }) {
           .navMobile:hover {
             transform: translateY(-1px);
             border-color: rgb(var(--accent) / 0.35);
+          }
+
+          /* =========================
+             LOGO: premium animation
+             ========================= */
+          .logoShell {
+            will-change: transform, box-shadow, filter;
+            transform-style: preserve-3d;
+            transition: transform 220ms ease, border-color 220ms ease, box-shadow 220ms ease, filter 220ms ease;
+          }
+
+          /* idle breathing */
+          .logoShell {
+            animation: logoBreath 6.8s ease-in-out infinite;
+          }
+          @keyframes logoBreath {
+            0% { transform: translateY(0px) scale(1); }
+            50% { transform: translateY(-1px) scale(1.01); }
+            100% { transform: translateY(0px) scale(1); }
+          }
+
+          /* hover tilt + lift */
+          .group:hover .logoShell {
+            transform: translateY(-2px) rotateX(10deg) rotateY(-12deg) scale(1.03);
+            border-color: rgb(var(--accent) / 0.55);
+            box-shadow: 0 18px 55px rgba(0,0,0,0.30);
+            filter: brightness(1.03);
+          }
+          .group:active .logoShell {
+            transform: translateY(-1px) rotateX(6deg) rotateY(-8deg) scale(1.01);
+          }
+
+          .logoFloatV2 {
+            transform: translateZ(20px);
+            transition: transform 220ms ease;
+          }
+          .group:hover .logoFloatV2 {
+            transform: translateZ(28px) scale(1.02);
+          }
+
+          /* rotating ring */
+          .logoRing {
+            position: absolute;
+            inset: -40%;
+            border-radius: 9999px;
+            background: conic-gradient(
+              from 180deg,
+              rgb(var(--accent) / 0.00),
+              rgb(var(--accent) / 0.35),
+              rgb(var(--accent2) / 0.22),
+              rgb(var(--accent) / 0.00)
+            );
+            opacity: 0.42;
+            filter: blur(10px);
+            animation: ringSpin 7.5s linear infinite;
+          }
+          @keyframes ringSpin {
+            to { transform: rotate(360deg); }
+          }
+
+          /* soft inner glow */
+          .logoGlow {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(60% 60% at 30% 25%, rgb(var(--accent) / 0.18), rgb(0 0 0 / 0) 60%),
+                        radial-gradient(60% 60% at 75% 70%, rgb(var(--accent2) / 0.14), rgb(0 0 0 / 0) 62%);
+            opacity: 0.75;
+            pointer-events: none;
+          }
+
+          /* shine sweep */
+          .logoShine {
+            position: absolute;
+            inset: -30%;
+            background: linear-gradient(
+              120deg,
+              rgba(255,255,255,0) 40%,
+              rgba(255,255,255,0.10) 50%,
+              rgba(255,255,255,0) 60%
+            );
+            transform: translateX(-35%) rotate(8deg);
+            opacity: 0;
+            transition: opacity 220ms ease;
+            pointer-events: none;
+          }
+          .group:hover .logoShine {
+            opacity: 1;
+            animation: shineSweep 900ms ease forwards;
+          }
+          @keyframes shineSweep {
+            from { transform: translateX(-35%) rotate(8deg); }
+            to   { transform: translateX(35%) rotate(8deg); }
+          }
+
+          /* Reduced motion */
+          @media (prefers-reduced-motion: reduce) {
+            .logoShell { animation: none !important; }
+            .logoRing { animation: none !important; }
+            .logoShine { animation: none !important; }
+            .group:hover .logoShell { transform: none !important; }
+            .group:hover .logoFloatV2 { transform: none !important; }
           }
         `}</style>
       </header>

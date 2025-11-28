@@ -8,6 +8,8 @@ import Reveal from "../components/Reveal";
 import { useLang } from "../components/LanguageProvider";
 import { content } from "../../src/data/lang";
 import AtmosCanvas from "../components/AtmosCanvas";
+import FocusOnScroll from "../components/FocusOnScroll";
+
 
 type StageKey = "context" | "egg" | "larva" | "pupa" | "butterfly" | "contact";
 
@@ -471,7 +473,8 @@ export default function JourneyPage() {
                 </p>
               </Reveal>
               <Reveal delay={80}>
-                <h1 className="mt-3 text-3xl md:text-5xl font-semibold tracking-tight mysteryHeading">
+                <FocusOnScroll once>
+                  <h1 className="mt-3 text-3xl md:text-5xl font-semibold tracking-tight mysteryHeading">
                   <span className="mysteryGradient">
                     {t(
                       "A transformation you can feel — stage by stage.",
@@ -480,6 +483,8 @@ export default function JourneyPage() {
                     )}
                   </span>
                 </h1>
+                </FocusOnScroll>
+                
               </Reveal>
               <Reveal delay={140}>
                 <p className="mt-4 max-w-2xl text-sm md:text-base text-[rgb(var(--fg)/0.78)]">
@@ -553,9 +558,12 @@ export default function JourneyPage() {
                       </Reveal>
 
                       <Reveal delay={80}>
-                        <h2 className="mt-2 text-2xl md:text-4xl font-semibold tracking-tight mysteryHeading">
+                        <FocusOnScroll once>
+                          <h2 className="mt-2 text-2xl md:text-4xl font-semibold tracking-tight mysteryHeading">
                           <span className="mysteryGradient">{s.title}</span>
                         </h2>
+                        </FocusOnScroll>
+                        
                       </Reveal>
 
                       <Reveal delay={120}>
