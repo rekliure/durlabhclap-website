@@ -6,7 +6,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import BackgroundFX from "./components/BackgroundFX";
 import SiteHeader from "./components/SiteHeader";
 import Reveal from "./components/Reveal";
-import AtmosCanvas from "./components/AtmosCanvas";
 import { content } from "../src/data/lang";
 import { useLang } from "./components/LanguageProvider";
 
@@ -219,19 +218,13 @@ export default function Home() {
 
             <Reveal className="lg:col-span-6 relative" delay={120}>
               <div className="relative overflow-hidden rounded-3xl border border-[rgb(var(--border))] bg-[rgb(var(--surface)/0.55)] shadow-xl">
-                {/* NEW premium canvas layer */}
+                {/* Fluid canvas layer */}
                 <div className="absolute inset-0">
-                  <AtmosCanvas mode="hero" seed={11} className="opacity-[0.92]" />
+                  <HeroCanvas />
                 </div>
 
                 <div className="relative aspect-[4/3] w-full">
-                  <Image
-                    src="/hero-loop.gif"
-                    alt="Children learning at DCF centre"
-                    fill
-                    className="object-cover opacity-[0.92]"
-                    priority
-                  />
+                  <Image src="/hero-loop.gif" alt="Children learning at DCF centre" fill className="object-cover opacity-[0.92]" priority />
                 </div>
 
                 <div className="pointer-events-none absolute inset-0 heroGlass" />
@@ -248,10 +241,7 @@ export default function Home() {
             <div className="proofTrack py-3">
               <div className="proofRow">
                 {proofItems.concat(proofItems).map((x, i) => (
-                  <span
-                    key={`${x}-${i}`}
-                    className="inline-flex items-center gap-2 px-5 text-[11px] text-[rgb(var(--fg)/0.78)]"
-                  >
+                  <span key={`${x}-${i}`} className="inline-flex items-center gap-2 px-5 text-[11px] text-[rgb(var(--fg)/0.78)]">
                     <span className="h-1.5 w-1.5 rounded-full bg-[rgb(var(--accent2))] shadow-[0_0_18px_rgba(var(--accent),0.30)]" />
                     {x}
                   </span>
@@ -417,9 +407,7 @@ export default function Home() {
 
               <Reveal delay={260}>
                 <div className="mt-6 rounded-3xl border border-[rgb(var(--border))] bg-[rgb(var(--surface)/0.55)] p-6">
-                  <p className="text-sm font-semibold text-[rgb(var(--accent2))]">
-                    {t("Why this works", "ये क्यों काम करता है", "Why it works")}
-                  </p>
+                  <p className="text-sm font-semibold text-[rgb(var(--accent2))]">{t("Why this works", "ये क्यों काम करता है", "Why it works")}</p>
                   <p className="mt-2 text-sm text-[rgb(var(--fg)/0.78)]">
                     {t(
                       "Because the first goal is not syllabus — it’s confidence, expression and belonging.",
@@ -452,9 +440,7 @@ export default function Home() {
             <Reveal className="lg:col-span-7" delay={90}>
               <div className="editorialCard rounded-[28px] border border-[rgb(var(--border))] bg-[rgb(var(--surface)/0.55)] p-6 overflow-hidden">
                 <div className="editorialGlow" />
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[rgb(var(--accent2))]">
-                  {c.programs.ageTag}
-                </p>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[rgb(var(--accent2))]">{c.programs.ageTag}</p>
                 <h3 className="mt-3 text-lg font-semibold">{programs[0]?.title ?? ""}</h3>
                 <p className="mt-2 text-sm text-[rgb(var(--fg)/0.78)]">{programs[0]?.description ?? ""}</p>
 
@@ -489,9 +475,7 @@ export default function Home() {
                   <div className="rounded-[28px] border border-[rgb(var(--border))] bg-[rgb(var(--surface)/0.55)] p-6 transition-transform duration-200 hover:-translate-y-0.5">
                     <h3 className="text-sm font-semibold">{program.title}</h3>
                     <p className="mt-2 text-xs text-[rgb(var(--fg)/0.78)]">{program.description}</p>
-                    <div className="mt-4 inline-flex text-[11px] font-medium text-[rgb(var(--accent2))]">
-                      {c.programs.ageTag}
-                    </div>
+                    <div className="mt-4 inline-flex text-[11px] font-medium text-[rgb(var(--accent2))]">{c.programs.ageTag}</div>
                   </div>
                 </Reveal>
               ))}
@@ -506,11 +490,7 @@ export default function Home() {
                     {t("Butterfly Evolution", "Butterfly Evolution", "Butterfly Evolution")}
                   </p>
                   <p className="mt-2 text-lg font-semibold">
-                    {t(
-                      "See how joy becomes a culture — step by step.",
-                      "Dekho kaise joy culture banti hai — step by step.",
-                      "Joy → culture, step by step."
-                    )}
+                    {t("See how joy becomes a culture — step by step.", "Dekho kaise joy culture banti hai — step by step.", "Joy → culture, step by step.")}
                   </p>
                 </div>
                 <Link
@@ -544,16 +524,13 @@ export default function Home() {
           </Reveal>
 
           <Reveal className="lg:col-span-7 space-y-4" delay={120}>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[rgb(var(--accent2))]">
-              {c.founder.label}
-            </p>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[rgb(var(--accent2))]">{c.founder.label}</p>
             <h2 className="text-2xl font-semibold mysteryHeading">
               “<span className="mysteryGradient">{c.founder.quote}</span>”
             </h2>
             <p className="text-sm text-[rgb(var(--fg)/0.78)]">{c.founder.p1}</p>
             <p className="text-sm text-[rgb(var(--fg)/0.78)]">{c.founder.p2}</p>
             <p className="text-sm text-[rgb(var(--fg)/0.78)]">{c.founder.p3}</p>
-
             <p className="text-xs text-[rgb(var(--muted))]">
               — <span className="font-semibold text-[rgb(var(--fg))]">{c.founder.signature}</span>
             </p>
@@ -621,9 +598,7 @@ export default function Home() {
                       contact@durlabhclapfoundation.org
                     </a>
                   </p>
-                  <p>
-                    {c.contact.locationLabel}: Shahpur, Kangra, Himachal Pradesh, India
-                  </p>
+                  <p>{c.contact.locationLabel}: Shahpur, Kangra, Himachal Pradesh, India</p>
                   <p className="text-[rgb(var(--muted))]">{c.contact.basedIn}</p>
 
                   <div className="mt-4 flex flex-wrap gap-2">
@@ -650,7 +625,6 @@ export default function Home() {
         </section>
       </main>
 
-      {/* Footer: removed duplicate email (contact already shows it) */}
       <footer className="border-t border-[rgb(var(--border))] bg-[rgb(var(--bg))] py-6">
         <div className="mx-auto w-full max-w-[1400px] px-4 sm:px-6 lg:px-10 flex flex-col gap-3 text-xs text-[rgb(var(--muted))] md:flex-row md:items-center md:justify-between">
           <p>
@@ -658,6 +632,9 @@ export default function Home() {
           </p>
           <div className="flex flex-wrap gap-4">
             <span>{c.contact.basedIn}</span>
+            <a href="mailto:contact@durlabhclapfoundation.org" className="hover:text-[rgb(var(--accent2))]">
+              contact@durlabhclapfoundation.org
+            </a>
           </div>
         </div>
       </footer>
@@ -709,7 +686,7 @@ export default function Home() {
           opacity: 1;
         }
 
-        /* Magnetic-ish buttons (simple + safe) */
+        /* Magnetic buttons */
         .btnMagnetic {
           transition: transform 180ms ease, filter 180ms ease, box-shadow 180ms ease;
           box-shadow: 0 14px 40px rgba(0, 0, 0, 0.22);
@@ -756,4 +733,118 @@ function ManifestoCard({ num, title, body }: { num: string; title: string; body:
       <p className="mt-3 text-sm text-[rgb(var(--fg)/0.82)]">{body}</p>
     </div>
   );
+}
+
+function HeroCanvas() {
+  const ref = useRef<HTMLCanvasElement | null>(null);
+  const mouse = useRef({ x: 0.5, y: 0.5, vx: 0, vy: 0 });
+
+  useEffect(() => {
+    const canvas = ref.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d", { alpha: true });
+    if (!ctx) return;
+
+    const reduce =
+      typeof window !== "undefined" &&
+      window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    let raf = 0;
+    let t = 0;
+
+    const resize = () => {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const { width, height } = canvas.getBoundingClientRect();
+      canvas.width = Math.max(1, Math.floor(width * dpr));
+      canvas.height = Math.max(1, Math.floor(height * dpr));
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    };
+
+    const onMove = (e: MouseEvent) => {
+      const r = canvas.getBoundingClientRect();
+      const nx = (e.clientX - r.left) / Math.max(1, r.width);
+      const ny = (e.clientY - r.top) / Math.max(1, r.height);
+      mouse.current.vx = (nx - mouse.current.x) * 0.12;
+      mouse.current.vy = (ny - mouse.current.y) * 0.12;
+      mouse.current.x = nx;
+      mouse.current.y = ny;
+    };
+
+    const draw = () => {
+      const { width, height } = canvas.getBoundingClientRect();
+      ctx.clearRect(0, 0, width, height);
+
+      mouse.current.vx *= 0.92;
+      mouse.current.vy *= 0.92;
+
+      const mx = mouse.current.x * width;
+      const my = mouse.current.y * height;
+
+      const g1 = ctx.createRadialGradient(mx, my, 20, mx, my, Math.max(width, height) * 0.8);
+      g1.addColorStop(0, "rgba(34,211,238,0.20)");
+      g1.addColorStop(0.45, "rgba(34,211,238,0.06)");
+      g1.addColorStop(1, "rgba(0,0,0,0)");
+
+      const g2 = ctx.createRadialGradient(width * 0.86, height * 0.72, 30, width * 0.86, height * 0.72, Math.max(width, height) * 0.85);
+      g2.addColorStop(0, "rgba(251,113,133,0.14)");
+      g2.addColorStop(0.5, "rgba(251,113,133,0.05)");
+      g2.addColorStop(1, "rgba(0,0,0,0)");
+
+      ctx.fillStyle = g1;
+      ctx.fillRect(0, 0, width, height);
+      ctx.fillStyle = g2;
+      ctx.fillRect(0, 0, width, height);
+
+      const lines = 26;
+      const amp = 18;
+      const speed = reduce ? 0 : 0.018;
+
+      for (let i = 0; i < lines; i++) {
+        const y = (i / (lines - 1)) * height;
+        const phase = t * speed + i * 0.22;
+        const wob = Math.sin(phase) * amp + mouse.current.vx * 55;
+
+        ctx.beginPath();
+        const a = 0.08 + i * 0.012;
+        ctx.strokeStyle = `rgba(255,255,255,${a})`;
+        ctx.lineWidth = 1;
+
+        for (let x = -20; x <= width + 20; x += 18) {
+          const k = x / width;
+          const wave =
+            Math.sin(k * 6 + phase) * amp +
+            Math.cos(k * 3.6 - phase * 1.15) * (amp * 0.55) +
+            (mouse.current.y - 0.5) * 22;
+
+          const yy = y + wave + wob * 0.08;
+          if (x === -20) ctx.moveTo(x, yy);
+          else ctx.lineTo(x, yy);
+        }
+        ctx.stroke();
+      }
+
+      const vg = ctx.createRadialGradient(width * 0.5, height * 0.4, 20, width * 0.5, height * 0.4, Math.max(width, height));
+      vg.addColorStop(0, "rgba(0,0,0,0)");
+      vg.addColorStop(1, "rgba(0,0,0,0.22)");
+      ctx.fillStyle = vg;
+      ctx.fillRect(0, 0, width, height);
+
+      if (!reduce) t += 1;
+      raf = requestAnimationFrame(draw);
+    };
+
+    resize();
+    window.addEventListener("resize", resize);
+    window.addEventListener("mousemove", onMove, { passive: true });
+    raf = requestAnimationFrame(draw);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", resize);
+      window.removeEventListener("mousemove", onMove as any);
+    };
+  }, []);
+
+  return <canvas ref={ref} className="h-full w-full" aria-hidden />;
 }

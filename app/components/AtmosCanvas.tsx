@@ -1,285 +1,168 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 
-type Mode = "hero" | "journey";
-
-// tiny seeded random (stable visuals)
-function mulberry32(seed: number) {
-  return function () {
-    let t = (seed += 0x6d2b79f5);
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-function clamp(n: number, a: number, b: number) {
-  return Math.max(a, Math.min(b, n));
-}
-
-export default function AtmosCanvas({
-  mode = "journey",
-  seed = 7,
-  className = "",
-}: {
-  mode?: Mode;
+type AtmosCanvasProps = {
+  mode?: "hero" | "journey";
   seed?: number;
   className?: string;
-}) {
+};
+
+export default function AtmosCanvas({ mode = "hero", seed = 1, className = "" }: AtmosCanvasProps) {
   const ref = useRef<HTMLCanvasElement | null>(null);
+  const mouse = useRef({ x: 0.5, y: 0.5, vx: 0, vy: 0 });
+
+  const cfg = useMemo(() => {
+    // small differences per mode (journey slightly calmer & denser)
+    const isJourney = mode === "journey";
+    const density = isJourney ? 30 : 26;
+    const amp = isJourney ? 14 : 18;
+    const speed = isJourney ? 0.014 : 0.018;
+
+    // deterministic pseudo-random from seed
+    const rand = mulberry32(Math.floor(seed || 1));
+    const hueShiftA = rand() * 0.08; // used only for subtle alpha modulation
+    const hueShiftB = rand() * 0.08;
+
+    return { density, amp, speed, rand, hueShiftA, hueShiftB };
+  }, [mode, seed]);
 
   useEffect(() => {
-    const cv = ref.current;
-    if (!cv) return;
-    const ctx = cv.getContext("2d", { alpha: true });
+    const canvas = ref.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d", { alpha: true });
     if (!ctx) return;
 
     const reduce =
       typeof window !== "undefined" &&
-      window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+      window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     let raf = 0;
     let t = 0;
 
     const resize = () => {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      const r = cv.getBoundingClientRect();
-      cv.width = Math.max(2, Math.floor(r.width * dpr));
-      cv.height = Math.max(2, Math.floor(r.height * dpr));
+      const { width, height } = canvas.getBoundingClientRect();
+      canvas.width = Math.max(1, Math.floor(width * dpr));
+      canvas.height = Math.max(1, Math.floor(height * dpr));
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
 
-    // intersection (pause when offscreen)
-    let running = true;
-    const io = new IntersectionObserver(
-      (entries) => {
-        running = !!entries[0]?.isIntersecting;
-      },
-      { threshold: 0.08 }
-    );
-    io.observe(cv);
-
-    resize();
-    window.addEventListener("resize", resize);
-
-    // Build stable constellation points
-    const rand = mulberry32(seed);
-    const points = Array.from({ length: mode === "hero" ? 42 : 56 }).map(() => ({
-      x: rand(),
-      y: rand(),
-      r: 0.8 + rand() * 1.8,
-      dx: (rand() - 0.5) * 0.0006,
-      dy: (rand() - 0.5) * 0.0006,
-    }));
-
-    // Precompute “root growth” branches
-    const branches = (() => {
-      const b: Array<{ a: [number, number]; c: [number, number]; d: [number, number]; w: number }> = [];
-      const baseCount = mode === "hero" ? 9 : 12;
-      for (let i = 0; i < baseCount; i++) {
-        const x0 = 0.42 + (i / (baseCount - 1)) * 0.16;
-        const y0 = 0.98;
-        const x1 = x0 + (rand() - 0.5) * 0.18;
-        const y1 = 0.62 - rand() * 0.25;
-        const cx = (x0 + x1) / 2 + (rand() - 0.5) * 0.12;
-        const cy = (y0 + y1) / 2 - rand() * 0.16;
-        b.push({ a: [x0, y0], c: [cx, cy], d: [x1, y1], w: 1.2 + rand() * 1.6 });
-        // sub branches
-        const sub = 2 + Math.floor(rand() * 2);
-        for (let s = 0; s < sub; s++) {
-          const sx0 = x1;
-          const sy0 = y1;
-          const sx1 = sx0 + (rand() - 0.5) * 0.22;
-          const sy1 = sy0 - (0.10 + rand() * 0.18);
-          const scx = (sx0 + sx1) / 2 + (rand() - 0.5) * 0.14;
-          const scy = (sy0 + sy1) / 2 - rand() * 0.12;
-          b.push({ a: [sx0, sy0], c: [scx, scy], d: [sx1, sy1], w: 0.7 + rand() * 1.1 });
-        }
-      }
-      return b;
-    })();
-
-    const getCSSVar = (name: string, fallback: string) => {
-      const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-      return v || fallback;
+    const onMove = (e: PointerEvent) => {
+      const r = canvas.getBoundingClientRect();
+      const nx = (e.clientX - r.left) / Math.max(1, r.width);
+      const ny = (e.clientY - r.top) / Math.max(1, r.height);
+      mouse.current.vx = (nx - mouse.current.x) * 0.12;
+      mouse.current.vy = (ny - mouse.current.y) * 0.12;
+      mouse.current.x = nx;
+      mouse.current.y = ny;
     };
 
     const draw = () => {
-      if (!running) {
-        raf = requestAnimationFrame(draw);
-        return;
-      }
+      const { width, height } = canvas.getBoundingClientRect();
+      ctx.clearRect(0, 0, width, height);
 
-      const r = cv.getBoundingClientRect();
-      const W = r.width || 1;
-      const H = r.height || 1;
-      ctx.clearRect(0, 0, W, H);
+      mouse.current.vx *= 0.92;
+      mouse.current.vy *= 0.92;
 
-      // stage progress from scroll (0..1) based on canvas position in viewport
-      const top = r.top;
-      const vh = window.innerHeight || 1;
-      const p = clamp(1 - (top + H * 0.25) / (vh + H * 0.25), 0, 1);
+      const mx = mouse.current.x * width;
+      const my = mouse.current.y * height;
 
-      // Theme colors from CSS tokens
-      // accent is hex in your ThemeProvider currently; for canvas we use safe fallbacks
-      const isDark =
-        typeof window !== "undefined" &&
-        window.matchMedia?.("(prefers-color-scheme: dark)")?.matches;
+      // subtle seed-based alpha shifts (same colors, just slightly different feel)
+      const a1 = 0.20 + cfg.hueShiftA * 0.06;
+      const a2 = 0.14 + cfg.hueShiftB * 0.06;
 
-      // We’ll use slightly different alpha for light mode so it remains visible
-      const lineA = isDark ? 0.18 : 0.12;
-      const nodeA = isDark ? 0.28 : 0.20;
-      const rootA = isDark ? 0.22 : 0.14;
+      const g1 = ctx.createRadialGradient(mx, my, 20, mx, my, Math.max(width, height) * 0.8);
+      g1.addColorStop(0, `rgba(34,211,238,${a1})`);
+      g1.addColorStop(0.45, "rgba(34,211,238,0.06)");
+      g1.addColorStop(1, "rgba(0,0,0,0)");
 
-      // Extract rgb(var(--accent)) patterns are not readable here, so we use brand-like fallbacks.
-      // You can later replace with real parsed values if you want.
-      const accent = "rgba(34,211,238,";
-      const accent2 = "rgba(251,113,133,";
+      const g2 = ctx.createRadialGradient(
+        width * 0.86,
+        height * 0.72,
+        30,
+        width * 0.86,
+        height * 0.72,
+        Math.max(width, height) * 0.85
+      );
+      g2.addColorStop(0, `rgba(251,113,133,${a2})`);
+      g2.addColorStop(0.5, "rgba(251,113,133,0.05)");
+      g2.addColorStop(1, "rgba(0,0,0,0)");
 
-      // ---- 1) Gradient Flow Lines (scroll reactive) ----
-      const flowCount = mode === "hero" ? 16 : 22;
-      const amp = (mode === "hero" ? 16 : 22) + p * 10;
-      const speed = reduce ? 0 : 0.012;
+      ctx.fillStyle = g1;
+      ctx.fillRect(0, 0, width, height);
+      ctx.fillStyle = g2;
+      ctx.fillRect(0, 0, width, height);
 
-      for (let i = 0; i < flowCount; i++) {
-        const y = (i / (flowCount - 1)) * H;
+      const lines = cfg.density;
+      const amp = cfg.amp;
+      const speed = reduce ? 0 : cfg.speed;
+
+      for (let i = 0; i < lines; i++) {
+        const y = (i / (lines - 1)) * height;
         const phase = t * speed + i * 0.22;
-        const g = ctx.createLinearGradient(0, y, W, y);
-        g.addColorStop(0, `${accent}${lineA})`);
-        g.addColorStop(0.55, `${accent2}${lineA * 0.85})`);
-        g.addColorStop(1, "rgba(255,255,255,0)");
-
-        ctx.strokeStyle = g;
-        ctx.lineWidth = 1;
-        ctx.globalAlpha = 0.8;
+        const wob = Math.sin(phase) * amp + mouse.current.vx * 55;
 
         ctx.beginPath();
-        for (let x = -20; x <= W + 20; x += 18) {
-          const k = x / W;
+        const a = 0.08 + i * 0.012;
+        ctx.strokeStyle = `rgba(255,255,255,${a})`;
+        ctx.lineWidth = 1;
+
+        for (let x = -20; x <= width + 20; x += 18) {
+          const k = x / width;
           const wave =
-            Math.sin(k * 6.2 + phase) * amp +
-            Math.cos(k * 3.6 - phase * 1.12) * (amp * 0.55);
-          const yy = y + wave * (0.35 + p * 0.85);
+            Math.sin(k * 6 + phase) * amp +
+            Math.cos(k * 3.6 - phase * 1.15) * (amp * 0.55) +
+            (mouse.current.y - 0.5) * 22;
+
+          const yy = y + wave + wob * 0.08;
           if (x === -20) ctx.moveTo(x, yy);
           else ctx.lineTo(x, yy);
         }
         ctx.stroke();
       }
-      ctx.globalAlpha = 1;
 
-      // ---- 2) Constellation Nodes & Trails ----
-      const radius = (mode === "hero" ? 86 : 110) * (0.65 + p * 0.65);
-
-      // update drift
-      for (const pt of points) {
-        pt.x += pt.dx * (reduce ? 0.2 : 1);
-        pt.y += pt.dy * (reduce ? 0.2 : 1);
-        if (pt.x < -0.05) pt.x = 1.05;
-        if (pt.x > 1.05) pt.x = -0.05;
-        if (pt.y < -0.05) pt.y = 1.05;
-        if (pt.y > 1.05) pt.y = -0.05;
-      }
-
-      // lines
-      ctx.lineWidth = 1;
-      for (let i = 0; i < points.length; i++) {
-        const a = points[i];
-        const ax = a.x * W;
-        const ay = a.y * H;
-        for (let j = i + 1; j < points.length; j++) {
-          const b = points[j];
-          const bx = b.x * W;
-          const by = b.y * H;
-          const dx = bx - ax;
-          const dy = by - ay;
-          const d = Math.hypot(dx, dy);
-          if (d < radius) {
-            const k = 1 - d / radius;
-            const alpha = (nodeA * 0.9) * k * (0.25 + p * 0.85);
-            const gg = ctx.createLinearGradient(ax, ay, bx, by);
-            gg.addColorStop(0, `${accent}${alpha})`);
-            gg.addColorStop(1, `${accent2}${alpha})`);
-            ctx.strokeStyle = gg;
-            ctx.beginPath();
-            ctx.moveTo(ax, ay);
-            ctx.lineTo(bx, by);
-            ctx.stroke();
-          }
-        }
-      }
-
-      // nodes
-      for (const n of points) {
-        const x = n.x * W;
-        const y = n.y * H;
-        const glow = ctx.createRadialGradient(x, y, 0, x, y, 26);
-        glow.addColorStop(0, `${accent}${0.20 * (0.35 + p * 0.75)})`);
-        glow.addColorStop(1, "rgba(0,0,0,0)");
-        ctx.fillStyle = glow;
-        ctx.fillRect(x - 26, y - 26, 52, 52);
-
-        ctx.fillStyle = `${accent2}${0.28 * (0.35 + p * 0.75)})`;
-        ctx.beginPath();
-        ctx.arc(x, y, n.r, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      // ---- 3) Root / Tree Growth ----
-      // draw partial Bezier based on progress
-      const grow = clamp((p - 0.10) / 0.90, 0, 1); // starts a bit later
-      ctx.lineCap = "round";
-      ctx.lineJoin = "round";
-
-      for (let i = 0; i < branches.length; i++) {
-        const br = branches[i];
-        const a = [br.a[0] * W, br.a[1] * H] as const;
-        const c = [br.c[0] * W, br.c[1] * H] as const;
-        const d = [br.d[0] * W, br.d[1] * H] as const;
-
-        // each branch appears slightly later
-        const local = clamp((grow - i * 0.012), 0, 1);
-        if (local <= 0) continue;
-
-        const alpha = rootA * (0.25 + local * 0.75);
-        const stroke = ctx.createLinearGradient(a[0], a[1], d[0], d[1]);
-        stroke.addColorStop(0, `${accent}${alpha})`);
-        stroke.addColorStop(1, `${accent2}${alpha * 0.9})`);
-        ctx.strokeStyle = stroke;
-        ctx.lineWidth = br.w;
-
-        // Draw partial quadratic by sampling
-        ctx.beginPath();
-        const steps = 26;
-        for (let s = 0; s <= steps; s++) {
-          const tt = (s / steps) * local;
-          const x = (1 - tt) * (1 - tt) * a[0] + 2 * (1 - tt) * tt * c[0] + tt * tt * d[0];
-          const y = (1 - tt) * (1 - tt) * a[1] + 2 * (1 - tt) * tt * c[1] + tt * tt * d[1];
-          if (s === 0) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
-        }
-        ctx.stroke();
-      }
-
-      // subtle vignette (helps light mode too)
-      const vg = ctx.createRadialGradient(W * 0.5, H * 0.4, 20, W * 0.5, H * 0.4, Math.max(W, H));
+      const vg = ctx.createRadialGradient(width * 0.5, height * 0.4, 20, width * 0.5, height * 0.4, Math.max(width, height));
       vg.addColorStop(0, "rgba(0,0,0,0)");
-      vg.addColorStop(1, isDark ? "rgba(0,0,0,0.22)" : "rgba(0,0,0,0.10)");
+      vg.addColorStop(1, "rgba(0,0,0,0.22)");
       ctx.fillStyle = vg;
-      ctx.fillRect(0, 0, W, H);
+      ctx.fillRect(0, 0, width, height);
 
       if (!reduce) t += 1;
       raf = requestAnimationFrame(draw);
     };
 
+    resize();
+    window.addEventListener("resize", resize);
+
+    // only track pointer when on canvas
+    canvas.addEventListener("pointermove", onMove, { passive: true });
+
     raf = requestAnimationFrame(draw);
 
     return () => {
       cancelAnimationFrame(raf);
-      io.disconnect();
       window.removeEventListener("resize", resize);
+      canvas.removeEventListener("pointermove", onMove as any);
     };
-  }, [mode, seed]);
+  }, [cfg]);
 
-  return <canvas ref={ref} className={`pointer-events-none absolute inset-0 ${className}`} aria-hidden />;
+  return (
+    <canvas
+      ref={ref}
+      className={["h-full w-full", mode === "hero" ? "opacity-[0.85] mix-blend-overlay" : "opacity-[0.92]", className].join(" ")}
+      aria-hidden
+    />
+  );
+}
+
+/** deterministic PRNG */
+function mulberry32(a: number) {
+  return function () {
+    let t = (a += 0x6d2b79f5);
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
 }

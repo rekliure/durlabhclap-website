@@ -5,9 +5,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import BackgroundFX from "../components/BackgroundFX";
 import SiteHeader from "../components/SiteHeader";
 import Reveal from "../components/Reveal";
-import AtmosCanvas from "../components/AtmosCanvas";
 import { useLang } from "../components/LanguageProvider";
 import { content } from "../../src/data/lang";
+import AtmosCanvas from "../components/AtmosCanvas";
 
 type StageKey = "context" | "egg" | "larva" | "pupa" | "butterfly" | "contact";
 
@@ -15,7 +15,7 @@ type Theme = {
   bg: string;
   glowA: string;
   glowB: string;
-  ink: string; // main accent (rgba)
+  ink: string;
 };
 
 type Stage = {
@@ -40,13 +40,6 @@ function prefersReducedMotion() {
 
 function easeInOutCubic(x: number) {
   return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
-}
-
-function keySeed(k: string) {
-  // stable seed from string
-  let s = 0;
-  for (let i = 0; i < k.length; i++) s += k.charCodeAt(i) * (i + 1);
-  return s || 7;
 }
 
 export default function JourneyPage() {
@@ -125,9 +118,21 @@ export default function JourneyPage() {
           "NEP 2020 aligned arts-based learning — creativity, critical thinking, life skills."
         ),
         bullets: [
-          t("Problem: schools crush free thinking and creativity.", "Problem: schools creativity crush kar rahe hain.", "Problem: schools creativity crush kar rahe hain."),
-          t("Vision: every child remains a creator.", "Vision: har bachcha creator bana rahe.", "Vision: har bachcha creator bana rahe."),
-          t("Model: CLAP Fellows bring arts into classrooms and community.", "Model: CLAP Fellows arts le aate hain.", "Model: CLAP Fellows arts le aate hain."),
+          t(
+            "Problem: schools crush free thinking and creativity.",
+            "Problem: schools creativity crush kar rahe hain.",
+            "Problem: schools creativity crush kar rahe hain."
+          ),
+          t(
+            "Vision: every child remains a creator.",
+            "Vision: har bachcha creator bana rahe.",
+            "Vision: har bachcha creator bana rahe."
+          ),
+          t(
+            "Model: CLAP Fellows bring arts into classrooms and community.",
+            "Model: CLAP Fellows arts le aate hain.",
+            "Model: CLAP Fellows arts le aate hain."
+          ),
         ],
         builds: [
           t("A clear mission teachers and parents can repeat.", "Aisi mission jo sab repeat kar saken.", "Clear mission."),
@@ -382,10 +387,10 @@ export default function JourneyPage() {
     <div className="min-h-screen bg-[rgb(var(--bg))] text-[rgb(var(--fg))] relative overflow-hidden">
       <BackgroundFX density={26} />
 
-      {/* Natural elements: flying birds + trails */}
+      {/* Natural elements: flying birds */}
       <BirdField />
 
-      {/* header stays stable */}
+      {/* header */}
       <div className="sticky top-0 z-[80]">
         <SiteHeader variant="journey" />
       </div>
@@ -515,6 +520,7 @@ export default function JourneyPage() {
           </div>
         </section>
 
+        {/* STAGES */}
         <div className="mt-12 space-y-10">
           {stages.map((s) => {
             const pRaw = progressRef.current[s.key] ?? 0;
@@ -527,203 +533,213 @@ export default function JourneyPage() {
                 ref={(el) => {
                   sectionRefs.current[s.key] = el;
                 }}
-                className="relative"
               >
-                {/* softer “veil” behind canvas so boundaries dissolve */}
-                <div className="pointer-events-none absolute -inset-6 md:-inset-10 -z-20 opacity-[0.75]">
-                  <div
-                    className="absolute inset-0 rounded-[44px] blur-2xl transition-opacity duration-500"
-                    style={{ backgroundImage: s.theme.bg, opacity: active === s.key ? 1 : 0.40 }}
-                  />
-                </div>
+                <div className="relative rounded-[40px] border border-[rgb(var(--border))] bg-[rgb(var(--bg)/0.80)] p-[1px] overflow-hidden">
+                  {/* gradient + atmosphere only inside card */}
+                  <div className="absolute inset-0 pointer-events-none">
+                    <div
+                      className="absolute inset-0"
+                      style={{ backgroundImage: s.theme.bg, opacity: active === s.key ? 0.85 : 0.55 }}
+                    />
+                    <AtmosCanvas
+                      variant="journey"
+                      seed={keySeed(s.key)}
+                      className="absolute inset-0 opacity-[0.75]"
+                    />
+                    <div className="absolute inset-0 bg-[rgb(var(--bg)/0.32)]" />
+                  </div>
 
-                {/* NEW: Premium atmospheric canvas per stage */}
-                <AtmosCanvas mode="journey" seed={keySeed(s.key)} className="-z-10 opacity-[0.92]" />
-
-                {/* content sits above */}
-                <div className="relative z-10 grid gap-6 md:grid-cols-12">
-                  <div className="md:col-span-7">
-                    <Reveal>
-                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[rgb(var(--accent2))]">
-                        {s.kicker}
-                      </p>
-                    </Reveal>
-
-                    <Reveal delay={80}>
-                      <h2 className="mt-2 text-2xl md:text-4xl font-semibold tracking-tight mysteryHeading">
-                        <span className="mysteryGradient">{s.title}</span>
-                      </h2>
-                    </Reveal>
-
-                    <Reveal delay={120}>
-                      <p className="mt-3 max-w-2xl text-sm md:text-base text-[rgb(var(--fg)/0.78)]">{s.subtitle}</p>
-                    </Reveal>
-
-                    <Reveal delay={160}>
-                      <div className="mt-6 rounded-3xl border border-[rgb(var(--border))] bg-[rgb(var(--bg)/0.56)] p-5 backdrop-blur stageCard">
-                        <p className="text-sm font-semibold text-[rgb(var(--accent2))]">
-                          {s.key === "contact"
-                            ? content[lang].contact.lookingForTitle
-                            : t("Purpose (clear + measurable)", "Purpose (clear + measurable)", "Purpose")}
+                  {/* content */}
+                  <div className="relative z-10 grid gap-6 p-5 md:p-7 md:grid-cols-12">
+                    <div className="md:col-span-7">
+                      <Reveal>
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[rgb(var(--accent2))]">
+                          {s.kicker}
                         </p>
+                      </Reveal>
 
-                        <ul className="mt-3 space-y-2 text-sm text-[rgb(var(--fg)/0.82)]">
-                          {s.bullets.map((b, idx) => (
-                            <li key={idx} className="flex gap-2">
-                              <span className="mt-[7px] h-1.5 w-1.5 rounded-full bg-[rgb(var(--accent2))]" />
-                              <span>{b}</span>
-                            </li>
-                          ))}
-                        </ul>
+                      <Reveal delay={80}>
+                        <h2 className="mt-2 text-2xl md:text-4xl font-semibold tracking-tight mysteryHeading">
+                          <span className="mysteryGradient">{s.title}</span>
+                        </h2>
+                      </Reveal>
 
-                        {s.key === "contact" ? (
-                          <div className="mt-5 flex flex-wrap gap-3">
-                            <a
-                              href="mailto:contact@durlabhclapfoundation.org"
-                              className="rounded-full bg-[rgb(var(--accent))] px-5 py-2 text-xs font-semibold text-[rgb(var(--bg))] shadow-lg hover:bg-[rgb(var(--accent2))] transition"
-                            >
-                              {t("Email us", "Email us", "Email us")}
-                            </a>
-                            <Link
-                              href="/"
-                              className="rounded-full border border-[rgb(var(--border))] bg-[rgb(var(--surface)/0.45)] px-5 py-2 text-xs font-semibold text-[rgb(var(--fg)/0.82)] hover:bg-[rgb(var(--surface)/0.65)] transition"
-                            >
-                              {t("Back to home", "Home पर वापस", "Back to home")}
-                            </Link>
-                          </div>
-                        ) : null}
-                      </div>
-                    </Reveal>
+                      <Reveal delay={120}>
+                        <p className="mt-3 max-w-2xl text-sm md:text-base text-[rgb(var(--fg)/0.78)]">
+                          {s.subtitle}
+                        </p>
+                      </Reveal>
 
-                    <div className="mt-5 grid gap-4 md:grid-cols-2">
-                      <Reveal delay={200}>
-                        <div className="rounded-3xl border border-[rgb(var(--border))] bg-[rgb(var(--surface)/0.40)] p-5 backdrop-blur stageCard">
+                      <Reveal delay={160}>
+                        <div className="mt-6 rounded-3xl border border-[rgb(var(--border))] bg-[rgb(var(--bg)/0.56)] p-5 backdrop-blur stageCard">
                           <p className="text-sm font-semibold text-[rgb(var(--accent2))]">
-                            {t("What this stage builds", "Is stage se kya banta hai", "What it builds")}
+                            {s.key === "contact"
+                              ? content[lang].contact.lookingForTitle
+                              : t("Purpose (clear + measurable)", "Purpose (clear + measurable)", "Purpose")}
                           </p>
+
                           <ul className="mt-3 space-y-2 text-sm text-[rgb(var(--fg)/0.82)]">
-                            {s.builds.map((x, idx) => (
+                            {s.bullets.map((b, idx) => (
                               <li key={idx} className="flex gap-2">
                                 <span className="mt-[7px] h-1.5 w-1.5 rounded-full bg-[rgb(var(--accent2))]" />
-                                <span>{x}</span>
+                                <span>{b}</span>
                               </li>
                             ))}
                           </ul>
+
+                          {s.key === "contact" ? (
+                            <div className="mt-5 flex flex-wrap gap-3">
+                              <a
+                                href="mailto:contact@durlabhclapfoundation.org"
+                                className="rounded-full bg-[rgb(var(--accent))] px-5 py-2 text-xs font-semibold text-[rgb(var(--bg))] shadow-lg hover:bg-[rgb(var(--accent2))] transition"
+                              >
+                                {t("Email us", "Email us", "Email us")}
+                              </a>
+                              <Link
+                                href="/"
+                                className="rounded-full border border-[rgb(var(--border))] bg-[rgb(var(--surface)/0.45)] px-5 py-2 text-xs font-semibold text-[rgb(var(--fg)/0.82)] hover:bg-[rgb(var(--surface)/0.65)] transition"
+                              >
+                                {t("Back to home", "Home पर वापस", "Back to home")}
+                              </Link>
+                            </div>
+                          ) : null}
                         </div>
                       </Reveal>
 
-                      <Reveal delay={240}>
-                        <div className="rounded-3xl border border-[rgb(var(--border))] bg-[rgb(var(--surface)/0.40)] p-5 backdrop-blur stageCard">
-                          <p className="text-sm font-semibold text-[rgb(var(--accent2))]">
-                            {t("Signals to look for", "Signals to look for", "Signals")}
+                      <div className="mt-5 grid gap-4 md:grid-cols-2">
+                        <Reveal delay={200}>
+                          <div className="rounded-3xl border border-[rgb(var(--border))] bg-[rgb(var(--surface)/0.40)] p-5 backdrop-blur stageCard">
+                            <p className="text-sm font-semibold text-[rgb(var(--accent2))]">
+                              {t("What this stage builds", "Is stage se kya banta hai", "What it builds")}
+                            </p>
+                            <ul className="mt-3 space-y-2 text-sm text-[rgb(var(--fg)/0.82)]">
+                              {s.builds.map((x, idx) => (
+                                <li key={idx} className="flex gap-2">
+                                  <span className="mt-[7px] h-1.5 w-1.5 rounded-full bg-[rgb(var(--accent2))]" />
+                                  <span>{x}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        </Reveal>
+
+                        <Reveal delay={240}>
+                          <div className="rounded-3xl border border-[rgb(var(--border))] bg-[rgb(var(--surface)/0.40)] p-5 backdrop-blur stageCard">
+                            <p className="text-sm font-semibold text-[rgb(var(--accent2))]">
+                              {t("Signals to look for", "Signals to look for", "Signals")}
+                            </p>
+                            <ul className="mt-3 space-y-2 text-sm text-[rgb(var(--fg)/0.82)]">
+                              {s.signals.map((x, idx) => (
+                                <li key={idx} className="flex gap-2">
+                                  <span className="mt-[7px] h-1.5 w-1.5 rounded-full bg-[rgb(var(--accent2))]" />
+                                  <span>{x}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        </Reveal>
+                      </div>
+
+                      <Reveal delay={280}>
+                        <div className="mt-4 rounded-3xl border border-[rgb(var(--accent)/0.22)] bg-[rgb(var(--bg)/0.56)] p-5 backdrop-blur stageCard">
+                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[rgb(var(--accent2))]">
+                            {t("Why it matters", "Why it matters", "Why it matters")}
                           </p>
-                          <ul className="mt-3 space-y-2 text-sm text-[rgb(var(--fg)/0.82)]">
-                            {s.signals.map((x, idx) => (
-                              <li key={idx} className="flex gap-2">
-                                <span className="mt-[7px] h-1.5 w-1.5 rounded-full bg-[rgb(var(--accent2))]" />
-                                <span>{x}</span>
-                              </li>
-                            ))}
-                          </ul>
+                          <p className="mt-2 text-sm md:text-base text-[rgb(var(--fg)/0.78)]">
+                            {s.significance}
+                          </p>
+
+                          <div className="mt-4 flex flex-wrap gap-2">
+                            {stages
+                              .filter((x) => x.key !== s.key)
+                              .filter((x) => x.key !== "contact")
+                              .slice(0, 3)
+                              .map((x) => (
+                                <button
+                                  key={x.key}
+                                  type="button"
+                                  onClick={() => jumpTo(x.key)}
+                                  className="rounded-full border border-[rgb(var(--border))] bg-[rgb(var(--surface)/0.50)] px-4 py-2 text-xs text-[rgb(var(--fg)/0.82)] hover:bg-[rgb(var(--surface)/0.70)] hover:text-[rgb(var(--accent2))] transition"
+                                >
+                                  {t("Next:", "Next:", "Next:")} {x.label} →
+                                </button>
+                              ))}
+                          </div>
                         </div>
                       </Reveal>
                     </div>
 
-                    <Reveal delay={280}>
-                      <div className="mt-4 rounded-3xl border border-[rgb(var(--accent)/0.22)] bg-[rgb(var(--bg)/0.56)] p-5 backdrop-blur stageCard">
-                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[rgb(var(--accent2))]">
-                          {t("Why it matters", "Why it matters", "Why it matters")}
-                        </p>
-                        <p className="mt-2 text-sm md:text-base text-[rgb(var(--fg)/0.78)]">{s.significance}</p>
+                    <div className="md:col-span-5">
+                      <Reveal delay={130}>
+                        <div className="rounded-3xl border border-[rgb(var(--border))] bg-[rgb(var(--bg)/0.56)] p-5 backdrop-blur stageCard">
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[rgb(var(--accent2))]">
+                                {t("Evolution", "Evolution", "Evolution")}
+                              </p>
+                              <p className="mt-2 text-sm text-[rgb(var(--fg)/0.78)]">
+                                {t("Shape morphs as you scroll.", "Scroll pe shape morph hota hai.", "Scroll to morph.")}
+                              </p>
+                            </div>
 
-                        <div className="mt-4 flex flex-wrap gap-2">
-                          {stages
-                            .filter((x) => x.key !== s.key)
-                            .filter((x) => x.key !== "contact")
-                            .slice(0, 3)
-                            .map((x) => (
-                              <button
-                                key={x.key}
-                                type="button"
-                                onClick={() => jumpTo(x.key)}
-                                className="rounded-full border border-[rgb(var(--border))] bg-[rgb(var(--surface)/0.50)] px-4 py-2 text-xs text-[rgb(var(--fg)/0.82)] hover:bg-[rgb(var(--surface)/0.70)] hover:text-[rgb(var(--accent2))] transition"
-                              >
-                                {t("Next:", "Next:", "Next:")} {x.label} →
-                              </button>
-                            ))}
-                        </div>
-                      </div>
-                    </Reveal>
-                  </div>
-
-                  <div className="md:col-span-5">
-                    <Reveal delay={130}>
-                      <div className="rounded-3xl border border-[rgb(var(--border))] bg-[rgb(var(--bg)/0.56)] p-5 backdrop-blur stageCard">
-                        <div className="flex items-start justify-between gap-3">
-                          <div>
-                            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[rgb(var(--accent2))]">
-                              {t("Evolution", "Evolution", "Evolution")}
-                            </p>
-                            <p className="mt-2 text-sm text-[rgb(var(--fg)/0.78)]">
-                              {t("Shape morphs as you scroll.", "Scroll pe shape morph hota hai.", "Scroll to morph.")}
-                            </p>
+                            <div className="rounded-full border border-[rgb(var(--accent)/0.22)] bg-[rgb(var(--surface)/0.55)] px-3 py-1 text-[11px] text-[rgb(var(--fg)/0.82)]">
+                              {Math.round(pRaw * 100)}%
+                            </div>
                           </div>
 
-                          <div className="rounded-full border border-[rgb(var(--accent)/0.22)] bg-[rgb(var(--surface)/0.55)] px-3 py-1 text-[11px] text-[rgb(var(--fg)/0.82)]">
-                            {Math.round(pRaw * 100)}%
+                          <div className="mt-4">
+                            <EvolutionMorph stage={s.key} p={p} ink={s.theme.ink} />
                           </div>
                         </div>
+                      </Reveal>
 
-                        <div className="mt-4">
-                          <EvolutionMorph stage={s.key} p={p} ink={s.theme.ink} />
-                        </div>
-                      </div>
-                    </Reveal>
-
-                    <Reveal delay={220}>
-                      <div className="mt-4 rounded-3xl border border-[rgb(var(--accent)/0.22)] bg-[rgb(var(--surface)/0.38)] p-5 backdrop-blur stageCard">
-                        <p className="text-sm font-semibold text-[rgb(var(--accent2))]">{t("Stage snapshot", "Stage snapshot", "Stage snapshot")}</p>
-                        <div className="mt-3 grid gap-2">
-                          <div className="rounded-2xl border border-[rgb(var(--border))] bg-[rgb(var(--bg)/0.56)] px-4 py-3 text-xs text-[rgb(var(--fg)/0.82)]">
-                            {t("Focus:", "Focus:", "Focus:")}{" "}
-                            <span className="text-[rgb(var(--accent2))]">{s.label}</span>
-                          </div>
-
-                          {s.key === "contact" ? (
-                            <>
-                              <div className="rounded-2xl border border-[rgb(var(--border))] bg-[rgb(var(--bg)/0.56)] px-4 py-3 text-xs text-[rgb(var(--fg)/0.82)]">
-                                {t("Email:", "Email:", "Email:")}{" "}
-                                <a
-                                  href="mailto:contact@durlabhclapfoundation.org"
-                                  className="text-[rgb(var(--accent2))] hover:opacity-90"
-                                >
-                                  contact@durlabhclapfoundation.org
-                                </a>
-                              </div>
-
-                              <div className="rounded-2xl border border-[rgb(var(--border))] bg-[rgb(var(--bg)/0.56)] px-4 py-3 text-xs text-[rgb(var(--fg)/0.82)]">
-                                {content[lang].contact.locationLabel}: Shahpur, Kangra, Himachal Pradesh, India
-                              </div>
-                            </>
-                          ) : (
+                      <Reveal delay={220}>
+                        <div className="mt-4 rounded-3xl border border-[rgb(var(--accent)/0.22)] bg-[rgb(var(--surface)/0.38)] p-5 backdrop-blur stageCard">
+                          <p className="text-sm font-semibold text-[rgb(var(--accent2))]">
+                            {t("Stage snapshot", "Stage snapshot", "Stage snapshot")}
+                          </p>
+                          <div className="mt-3 grid gap-2">
                             <div className="rounded-2xl border border-[rgb(var(--border))] bg-[rgb(var(--bg)/0.56)] px-4 py-3 text-xs text-[rgb(var(--fg)/0.82)]">
-                              {t("Feel:", "Feel:", "Feel:")}{" "}
-                              <span className="text-[rgb(var(--fg))]">
-                                {s.key === "context"
-                                  ? t("clarity + care", "clarity + care", "clarity + care")
-                                  : s.key === "egg"
+                              {t("Focus:", "Focus:", "Focus:")}{" "}
+                              <span className="text-[rgb(var(--accent2))]">{s.label}</span>
+                            </div>
+
+                            {s.key === "contact" ? (
+                              <>
+                                <div className="rounded-2xl border border-[rgb(var(--border))] bg-[rgb(var(--bg)/0.56)] px-4 py-3 text-xs text-[rgb(var(--fg)/0.82)]">
+                                  {t("Email:", "Email:", "Email:")}{" "}
+                                  <a
+                                    href="mailto:contact@durlabhclapfoundation.org"
+                                    className="text-[rgb(var(--accent2))] hover:opacity-90"
+                                  >
+                                    contact@durlabhclapfoundation.org
+                                  </a>
+                                </div>
+
+                                <div className="rounded-2xl border border-[rgb(var(--border))] bg-[rgb(var(--bg)/0.56)] px-4 py-3 text-xs text-[rgb(var(--fg)/0.82)]">
+                                  {content[lang].contact.locationLabel}: Shahpur, Kangra, Himachal Pradesh, India
+                                </div>
+                              </>
+                            ) : (
+                              <div className="rounded-2xl border border-[rgb(var(--border))] bg-[rgb(var(--bg)/0.56)] px-4 py-3 text-xs text-[rgb(var(--fg)/0.82)]">
+                                {t("Feel:", "Feel:", "Feel:")}{" "}
+                                <span className="text-[rgb(var(--fg))]">
+                                  {s.key === "context"
+                                    ? t("clarity + care", "clarity + care", "clarity + care")
+                                    : s.key === "egg"
                                     ? t("foundation", "foundation", "foundation")
                                     : s.key === "larva"
-                                      ? t("growth", "growth", "growth")
-                                      : s.key === "pupa"
-                                        ? t("transformation", "transformation", "transformation")
-                                        : t("flight", "flight", "flight")}
-                              </span>
-                            </div>
-                          )}
+                                    ? t("growth", "growth", "growth")
+                                    : s.key === "pupa"
+                                    ? t("transformation", "transformation", "transformation")
+                                    : t("flight", "flight", "flight")}
+                                </span>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    </Reveal>
+                      </Reveal>
+                    </div>
                   </div>
                 </div>
               </section>
@@ -739,6 +755,7 @@ export default function JourneyPage() {
         </footer>
       </main>
 
+      {/* premium hover + birds */}
       <style jsx global>{`
         .stageCard {
           transition: transform 220ms ease, border-color 220ms ease, box-shadow 220ms ease, background 220ms ease;
@@ -750,19 +767,18 @@ export default function JourneyPage() {
           background: rgb(var(--surface) / 0.50);
         }
 
-        /* FIXED: scale + per-bird opacity works with animated transform */
         @keyframes birdLTR {
-          0%   { transform: translateX(-18vw) translateY(0px) scale(var(--bScale, 1)); opacity: 0; }
-          10%  { opacity: var(--bOpacity, 0.6); }
-          50%  { transform: translateX(50vw) translateY(var(--bWiggle, -10px)) scale(var(--bScale, 1)); opacity: var(--bOpacity, 0.6); }
-          100% { transform: translateX(120vw) translateY(calc(var(--bWiggle, -10px) * -1)) scale(var(--bScale, 1)); opacity: 0; }
+          0% { transform: translateX(-18vw) translateY(0px); opacity: 0; }
+          10% { opacity: 0.9; }
+          50% { transform: translateX(50vw) translateY(var(--bWiggle, -10px)); opacity: 0.95; }
+          100% { transform: translateX(120vw) translateY(calc(var(--bWiggle, -10px) * -1)); opacity: 0; }
         }
 
         @keyframes birdRTL {
-          0%   { transform: translateX(120vw) translateY(0px) scale(var(--bScale, 1)); opacity: 0; }
-          10%  { opacity: var(--bOpacity, 0.6); }
-          50%  { transform: translateX(50vw) translateY(var(--bWiggle, 10px)) scale(var(--bScale, 1)); opacity: var(--bOpacity, 0.6); }
-          100% { transform: translateX(-18vw) translateY(calc(var(--bWiggle, 10px) * -1)) scale(var(--bScale, 1)); opacity: 0; }
+          0% { transform: translateX(120vw) translateY(0px); opacity: 0; }
+          10% { opacity: 0.9; }
+          50% { transform: translateX(50vw) translateY(var(--bWiggle, 10px)); opacity: 0.95; }
+          100% { transform: translateX(-18vw) translateY(calc(var(--bWiggle, 10px) * -1)); opacity: 0; }
         }
 
         .bird {
@@ -786,9 +802,27 @@ export default function JourneyPage() {
   );
 }
 
-/* ============================
-   NATURAL ELEMENTS: BIRDS
-   ============================ */
+/* helper for AtmosCanvas seed per stage */
+function keySeed(key: StageKey) {
+  switch (key) {
+    case "context":
+      return 11;
+    case "egg":
+      return 23;
+    case "larva":
+      return 37;
+    case "pupa":
+      return 53;
+    case "butterfly":
+      return 71;
+    case "contact":
+      return 89;
+    default:
+      return 1;
+  }
+}
+
+/* ========== NATURAL ELEMENTS: BIRDS ========== */
 
 function BirdField() {
   const reduce = prefersReducedMotion();
@@ -812,9 +846,9 @@ function BirdField() {
               top: b.top,
               ["--bDur" as any]: b.dur,
               ["--bWiggle" as any]: b.wiggle,
-              ["--bScale" as any]: b.scale,
-              ["--bOpacity" as any]: b.opacity,
               animationDelay: b.delay,
+              opacity: b.opacity,
+              transform: `scale(${b.scale})`,
             } as any
           }
         >
@@ -843,9 +877,7 @@ function BirdWithTrail() {
   );
 }
 
-/* ============================
-   DOCK ICONS
-   ============================ */
+/* ========== DOCK ICONS ========== */
 
 function StageGlyph({ stage }: { stage: StageKey }) {
   const cls = "h-4 w-4 text-[rgb(var(--accent2))] opacity-90";
@@ -896,13 +928,16 @@ function StageGlyph({ stage }: { stage: StageKey }) {
   }
 }
 
-/* ============================
-   EVOLUTION: SHAPE MORPHING
-   ============================ */
+/* ========== EVOLUTION MORPH ========== */
 
 type MorphProfile = {
-  a1: number; a2: number; a3: number; a4: number;
-  r: number; sx: number; sy: number;
+  a1: number;
+  a2: number;
+  a3: number;
+  a4: number;
+  r: number;
+  sx: number;
+  sy: number;
   mirror: boolean;
 };
 
@@ -944,6 +979,7 @@ function EvolutionMorph({ stage, p, ink }: { stage: StageKey; p: number; ink: st
 
     for (let i = 0; i < n; i++) {
       const theta = (i / n) * Math.PI * 2;
+
       const base = 1 + 0.03 * Math.sin(theta * 1 + time * 0.8);
       const harm =
         prof.a1 * Math.sin(theta * 1 + time * 0.9) +
@@ -975,7 +1011,10 @@ function EvolutionMorph({ stage, p, ink }: { stage: StageKey; p: number; ink: st
   const strokeColor = "rgb(var(--fg))";
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-[rgb(var(--border))] bg-[rgb(var(--surface)/0.46)]" style={{ minHeight: 280 }}>
+    <div
+      className="relative overflow-hidden rounded-2xl border border-[rgb(var(--border))] bg-[rgb(var(--surface)/0.46)]"
+      style={{ minHeight: 280 }}
+    >
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
@@ -1045,6 +1084,8 @@ function closedCatmullRomPath(pts: Array<{ x: number; y: number }>) {
   d += " Z";
   return d;
 }
+
+/* inner motifs */
 
 function InnerEggs() {
   const stroke = "currentColor";
