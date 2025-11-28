@@ -542,7 +542,7 @@ export default function JourneyPage() {
                       style={{ backgroundImage: s.theme.bg, opacity: active === s.key ? 0.85 : 0.55 }}
                     />
                     <AtmosCanvas
-                      variant="journey"
+                      mode="journey"
                       seed={keySeed(s.key)}
                       className="absolute inset-0 opacity-[0.75]"
                     />
