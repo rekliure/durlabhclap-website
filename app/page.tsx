@@ -9,6 +9,8 @@ import Reveal from "./components/Reveal";
 import FocusOnScroll from "./components/FocusOnScroll";
 import { content } from "../src/data/lang";
 import { useLang } from "./components/LanguageProvider";
+import Script from "next/script";
+
 
 type HomeKey = "hero" | "manifesto" | "impact" | "programs" | "founder" | "contact";
 type Theme = { bg: string; glowA: string; glowB: string };
@@ -256,6 +258,19 @@ export default function Home() {
         </section>
 
         {/* MANIFESTO / WHY WE EXIST */}
+        <Script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebPage",
+              name: "Why We Exist",
+              url: "https://durlabhclapfoundation.org/why-we-exist",
+              description:
+                "Durlabhclap Foundation exists to revive creativity through joyful and arts-based learning.",
+            }),
+          }}
+        />
         <section
           data-home="manifesto"
           ref={(el) => {
@@ -753,6 +768,7 @@ function ManifestoCard({ num, title, body }: { num: string; title: string; body:
   );
 }
 
+
 function HeroCanvas() {
   const ref = useRef<HTMLCanvasElement | null>(null);
   const mouse = useRef({ x: 0.5, y: 0.5, vx: 0, vy: 0 });
@@ -866,3 +882,4 @@ function HeroCanvas() {
 
   return <canvas ref={ref} className="h-full w-full" aria-hidden />;
 }
+
