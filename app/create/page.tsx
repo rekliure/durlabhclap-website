@@ -1,580 +1,272 @@
 "use client";
 
-import Link from "next/link";
-import { useMemo, useRef, useState, useEffect } from "react";
-import BackgroundFX from "../components/BackgroundFX";
-import SiteHeader from "../components/SiteHeader";
+import { useState } from "react";
+import { motion } from "framer-motion";
 
-type ActivityKey = "doodle" | "prompt" | "story" | "poem" | "pattern";
+// YOUR EXISTING COMPONENTS
+import SiteHeader from "../components/SiteHeader";       // ✔ Navbar
+//import Footer from "../components/Footer";               // ✔ Contact/Footer Section
+import CanvasBoard from "../components/CanvasBoard";     // ✔ Drawing Canvas
+import RightPanel from "../components/RightPanel";       // ✔ Prompt + Style Panel
+
 
 export default function CreatePage() {
-  const currentYear = new Date().getFullYear();
+  const [activeTab, setActiveTab] = useState("generate");
+  const [generatedImage, setGeneratedImage] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [stylizeSource, setStylizeSource] = useState<string | null>(null);
 
-  const activities = useMemo(
-    () =>
-      [
-        {
-          key: "doodle",
-          title: "Doodle Pad",
-          desc: "Free-draw with a smooth brush. Download your art.",
-        },
-        {
-          key: "prompt",
-          title: "Creative Prompt Spinner",
-          desc: "Get a playful task in 1 click (kids love this).",
-        },
-        {
-          key: "story",
-          title: "Story Seed Builder",
-          desc: "Pick a character + place + conflict → instant story seed.",
-        },
-        {
-          key: "poem",
-          title: "Tiny Poem Generator",
-          desc: "Make a 3-line poem and copy it.",
-        },
-        {
-          key: "pattern",
-          title: "Pattern Weaver",
-          desc: "Generate a simple craft pattern (tiles) and copy/share.",
-        },
-      ] as const,
-    []
-  );
+  /** -------------------------------------------------
+   *  AI GENERATE (FREE — Pollinations API)
+   * ------------------------------------------------- */
+  const generateArt = async (prompt: string) => {
+    if (!prompt) return;
+    setLoading(true);
 
-  const [active, setActive] = useState<ActivityKey>("doodle");
+    try {
+      const res = await fetch("/api/generate", {
+        method: "POST",
+        body: JSON.stringify({ prompt }),
+      });
+
+      const data = await res.json();
+      setGeneratedImage(data.image);
+    } catch (err) {
+      console.error("Generation error:", err);
+    }
+
+    setLoading(false);
+  };
+
+
+  /** -------------------------------------------------
+   *  STYLIZE (REGENERATE USING STYLE DESCRIPTION)
+   * ------------------------------------------------- */
+  const stylizeWithAI = async (style: string) => {
+    setLoading(true);
+
+    try {
+      // V2 STYLIZE — now ALWAYS works (with or without drawing)
+      const prompt = `${style}, children-friendly illustration, pastel kid-art style, soft colors, cute shapes, clean outlines`;
+
+      const res = await fetch("/api/generate", {
+        method: "POST",
+        body: JSON.stringify({ prompt }),
+      });
+
+      const data = await res.json();
+      setGeneratedImage(data.image);
+      setActiveTab("generate");
+
+    } catch (err) {
+      console.error("Stylize error:", err);
+    }
+
+    setLoading(false);
+  };
+
 
   return (
-    <div className="min-h-screen bg-[rgb(var(--bg))] text-[rgb(var(--fg))] relative overflow-hidden">
-      <BackgroundFX density={22} />
-      <SiteHeader variant="home" />
+    <div className="w-full min-h-screen bg-gradient-to-br from-[#FFF6F2] via-[#FFFFFF] to-[#FFF2DC]">
 
-      <main className="mx-auto w-full max-w-[1400px] px-4 sm:px-6 lg:px-10 pb-16">
-        {/* Header */}
-        <section className="pt-6">
-          <div className="rounded-[28px] border border-[rgb(var(--border))] bg-[rgb(var(--surface)/0.50)] p-6 md:p-8">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[rgb(var(--accent2))]">
-              Create
-            </p>
-            <h1 className="mt-2 text-2xl md:text-4xl font-semibold mysteryHeading">
-              <span className="mysteryGradient">A small creative studio for every visitor.</span>
-            </h1>
-            <p className="mt-3 max-w-3xl text-sm md:text-base text-[rgb(var(--fg)/0.78)]">
-              Pick an activity below. No login. Just play, create, and share.
-            </p>
+      {/* ⭐ NAVBAR / HEADER */}
+      <SiteHeader variant="journey" />
 
-            <div className="mt-5 flex flex-wrap gap-2">
-              {activities.map((a) => {
-                const isActive = a.key === active;
-                return (
-                  <button
-                    key={a.key}
-                    type="button"
-                    onClick={() => setActive(a.key)}
-                    className={[
-                      "rounded-full border px-4 py-2 text-xs transition",
-                      isActive
-                        ? "border-[rgb(var(--accent)/0.40)] bg-[rgb(var(--accent)/0.12)] text-[rgb(var(--accent2))]"
-                        : "border-[rgb(var(--border))] bg-[rgb(var(--surface)/0.55)] text-[rgb(var(--fg)/0.82)] hover:bg-[rgb(var(--surface)/0.80)]",
-                    ].join(" ")}
-                  >
-                    {a.title}
-                  </button>
-                );
-              })}
+
+      {/* ⭐ PAGE CONTAINER (Same as Journey / Why We Exist) */}
+      <main className="max-w-7xl mx-auto w-full px-6 pt-32 pb-24 flex gap-6">
+
+        {/* ---------------- LEFT TOOLBAR ---------------- */}
+        <div className="w-20 bg-white shadow-xl rounded-3xl h-[82vh] flex flex-col justify-between items-center py-6">
+          
+          <div className="flex flex-col gap-6 mt-5">
+
+            {/* Generate */}
+            <div
+              onClick={() => setActiveTab("generate")}
+              className={`cursor-pointer p-3 text-2xl rounded-2xl transition ${
+                activeTab === "generate" ? "bg-[#FFD4C8] shadow-lg" : "bg-gray-100"
+              }`}
+            >
+              🎨
             </div>
-          </div>
-        </section>
 
-        {/* Studio */}
-        <section className="mt-6 grid gap-4 lg:grid-cols-12">
-          <div className="lg:col-span-4">
-            <div className="rounded-[28px] border border-[rgb(var(--border))] bg-[rgb(var(--surface)/0.55)] p-6">
-              <p className="text-sm font-semibold text-[rgb(var(--accent2))]">What you’re doing</p>
-              <div className="mt-3 space-y-2 text-sm text-[rgb(var(--fg)/0.82)]">
-                {activities.map((a) => (
-                  <button
-                    key={a.key}
-                    type="button"
-                    onClick={() => setActive(a.key)}
-                    className={[
-                      "w-full text-left rounded-2xl border px-4 py-3 transition",
-                      a.key === active
-                        ? "border-[rgb(var(--accent)/0.34)] bg-[rgb(var(--surface)/0.70)]"
-                        : "border-[rgb(var(--border))] bg-[rgb(var(--surface)/0.35)] hover:bg-[rgb(var(--surface)/0.55)]",
-                    ].join(" ")}
-                  >
-                    <p className="font-semibold">{a.title}</p>
-                    <p className="text-xs text-[rgb(var(--fg)/0.72)]">{a.desc}</p>
-                  </button>
-                ))}
-              </div>
-
-              <div className="mt-5 rounded-2xl border border-[rgb(var(--border))] bg-[rgb(var(--bg)/0.55)] p-4 text-xs text-[rgb(var(--fg)/0.78)]">
-                Tip: on mobile, rotate to landscape for bigger canvas.
-              </div>
-
-              <div className="mt-5 flex flex-wrap gap-2">
-                <Link
-                  href="/journey"
-                  className="btnMagnetic inline-flex rounded-full border border-[rgb(var(--accent)/0.35)] bg-[rgb(var(--accent)/0.12)] px-4 py-2 text-xs font-semibold text-[rgb(var(--accent2))]"
-                >
-                  See Journey →
-                </Link>
-                <Link
-                  href="/#contact"
-                  className="btnMagnetic inline-flex rounded-full bg-[rgb(var(--accent))] px-4 py-2 text-xs font-semibold text-[rgb(var(--bg))] shadow-lg"
-                >
-                  Connect
-                </Link>
-              </div>
+            {/* Draw */}
+            <div
+              onClick={() => setActiveTab("draw")}
+              className={`cursor-pointer p-3 text-2xl rounded-2xl transition ${
+                activeTab === "draw" ? "bg-[#FFE685] shadow-lg" : "bg-gray-100"
+              }`}
+            >
+              ✏️
             </div>
+
+            {/* Stylize */}
+            <div
+              onClick={() => setActiveTab("stylize")}
+              className={`cursor-pointer p-3 text-2xl rounded-2xl transition ${
+                activeTab === "stylize" ? "bg-[#A5D8FF] shadow-lg" : "bg-gray-100"
+              }`}
+            >
+              ✨
+            </div>
+
           </div>
 
-          <div className="lg:col-span-8">
-            <div className="rounded-[28px] border border-[rgb(var(--border))] bg-[rgb(var(--surface)/0.55)] p-6">
-              {active === "doodle" ? <DoodlePad /> : null}
-              {active === "prompt" ? <PromptSpinner /> : null}
-              {active === "story" ? <StorySeed /> : null}
-              {active === "poem" ? <TinyPoem /> : null}
-              {active === "pattern" ? <PatternWeaver /> : null}
-            </div>
-          </div>
-        </section>
+        </div>
 
-        {/* CONTACT */}
-        <section
-          id="contact"
-          className="mt-10 rounded-[28px] border border-[rgb(var(--accent)/0.35)] bg-[rgb(var(--bg)/0.60)] px-6 py-8 md:px-8 backdrop-blur"
-        >
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-            <div className="max-w-2xl">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[rgb(var(--accent2))]">
-                Contact
-              </p>
-              <h2 className="mt-2 text-2xl font-semibold mysteryHeading">
-                <span className="mysteryGradient">Let’s build joyful learning together.</span>
-              </h2>
-              <p className="mt-3 text-sm text-[rgb(var(--fg)/0.82)]">
-                If you created something here—share it with us. If you want to collaborate, volunteer, or bring
-                arts-based learning to your community, ping us anytime.
-              </p>
 
-              <div className="mt-5 flex flex-wrap gap-2">
-                <a
-                  href="mailto:contact@durlabhclapfoundation.org"
-                  className="btnMagnetic inline-flex rounded-full bg-[rgb(var(--accent))] px-5 py-2.5 text-sm font-semibold text-[rgb(var(--bg))] shadow-lg"
-                >
-                  Email us
-                </a>
-                <Link
-                  href="/journey"
-                  className="btnMagnetic inline-flex rounded-full border border-[rgb(var(--accent)/0.35)] bg-[rgb(var(--accent)/0.12)] px-5 py-2.5 text-sm font-semibold text-[rgb(var(--accent2))]"
-                >
-                  Explore Journey →
-                </Link>
-              </div>
-            </div>
+        {/* ---------------- CENTER WORKSPACE ---------------- */}
+        <div className="flex-1 p-4 flex items-center justify-center relative h-[82vh]">
 
-            <div className="w-full max-w-md rounded-3xl border border-[rgb(var(--border))] bg-[rgb(var(--surface)/0.55)] p-6">
-              <p className="text-sm font-semibold text-[rgb(var(--accent2))]">Details</p>
-              <div className="mt-4 space-y-2 text-sm text-[rgb(var(--fg)/0.82)]">
-                <p>
-                  Email:{" "}
-                  <a href="mailto:contact@durlabhclapfoundation.org" className="text-[rgb(var(--accent2))] hover:opacity-90">
-                    contact@durlabhclapfoundation.org
-                  </a>
-                </p>
-                <p>Location: Shahpur, Kangra, Himachal Pradesh, India</p>
-                <p className="text-xs text-[rgb(var(--muted))]">Based in Himachal Pradesh • NEP 2020 aligned</p>
+          {/* DRAW TAB */}
+          {activeTab === "draw" && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="w-full h-full"
+            >
+              <CanvasBoard
+                sendToStylize={(img: string) => {
+                  setStylizeSource(img);
+                  setActiveTab("stylize");
+                }}
+              />
+            </motion.div>
+          )}
 
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {[
-                    { label: "Instagram", href: "https://instagram.com/" },
-                    { label: "YouTube", href: "https://youtube.com/" },
-                    { label: "LinkedIn", href: "https://linkedin.com/" },
-                  ].map((s) => (
-                    <a
-                      key={s.label}
-                      href={s.href}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="rounded-full border border-[rgb(var(--border))] bg-[rgb(var(--surface)/0.65)] px-4 py-2 text-xs text-[rgb(var(--fg)/0.82)] hover:bg-[rgb(var(--surface)/0.9)] hover:text-[rgb(var(--accent2))] transition"
-                    >
-                      {s.label}
-                    </a>
-                  ))}
+          {/* GENERATE TAB */}
+          {activeTab === "generate" && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex flex-col items-center gap-4 text-center"
+            >
+              {loading && (
+                <div className="text-lg font-semibold text-gray-600">
+                  Magic is happening… ✨
                 </div>
-              </div>
-            </div>
-          </div>
-        </section>
+              )}
+
+              {!loading && generatedImage && (
+                <div className="flex flex-col items-center gap-4">
+                  <img
+                    src={generatedImage}
+                    className="max-h-[60vh] rounded-3xl shadow-2xl"
+                  />
+
+                  {/* ⭐ Download Button — fixed color */}
+                  <a
+                    href={generatedImage}
+                    download="durlabhclap-creation.png"
+                    className="px-6 py-3 bg-[#FFB7A5] text-[#222] font-semibold rounded-xl shadow-lg hover:scale-105 transition"
+                  >
+                    Download Art
+                  </a>
+                </div>
+              )}
+
+              {!generatedImage && !loading && (
+                <div className="text-gray-600 text-xl">
+                  Generate something magical 🎨
+                </div>
+              )}
+            </motion.div>
+          )}
+
+          {/* STYLIZE TAB */}
+          {activeTab === "stylize" && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex flex-col items-center gap-3"
+            >
+              {!stylizeSource && (
+                <div className="text-gray-600">
+                  Choose a style on the right →  
+                </div>
+              )}
+
+              {stylizeSource && (
+                <>
+                  <img
+                    src={stylizeSource}
+                    className="max-h-[50vh] rounded-3xl shadow-xl"
+                  />
+                  <p className="text-gray-600 mt-4">
+                    Now choose style from the right →
+                  </p>
+                </>
+              )}
+            </motion.div>
+          )}
+
+        </div>
+
+
+        {/* ---------------- RIGHT PANEL ---------------- */}
+        <div className="w-[320px]">
+
+          {activeTab === "generate" && (
+            <RightPanel
+              onGenerate={generateArt}
+              onSelectStyle={(style: string) => generateArt(style)}
+            />
+          )}
+
+          {activeTab === "stylize" && (
+            <RightPanel
+              onGenerate={() => {}}
+              onSelectStyle={stylizeWithAI}
+            />
+          )}
+
+        </div>
       </main>
 
-      <footer className="border-t border-[rgb(var(--border))] bg-[rgb(var(--bg))] py-6">
-        <div className="mx-auto w-full max-w-[1400px] px-4 sm:px-6 lg:px-10 flex flex-col gap-3 text-xs text-[rgb(var(--muted))] md:flex-row md:items-center md:justify-between">
-          <p>© {currentYear} DurlabhCLAP Foundation. All rights reserved.</p>
-          <div className="flex flex-wrap gap-4">
-            <span>Shahpur, Kangra, HP</span>
-            <a href="mailto:contact@durlabhclapfoundation.org" className="hover:text-[rgb(var(--accent2))]">
-              contact@durlabhclapfoundation.org
-            </a>
-          </div>
-        </div>
-      </footer>
-    </div>
-  );
-}
 
-/* =======================
-   Activity: Doodle Pad
-   ======================= */
-function DoodlePad() {
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [down, setDown] = useState(false);
-  const [size, setSize] = useState(6);
+      {/* ⭐ FOOTER / CONTACT SECTION */}
+      {/* INLINE FOOTER (No import needed) */}
+<footer className="w-full bg-[#FAFAFA] border-t border-gray-200 mt-12">
+  <div className="max-w-7xl mx-auto px-6 py-12 grid grid-cols-1 md:grid-cols-3 gap-8">
 
-  useEffect(() => {
-    const c = canvasRef.current;
-    if (!c) return;
-    const ctx = c.getContext("2d");
-    if (!ctx) return;
-
-    const resize = () => {
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      const r = c.getBoundingClientRect();
-      c.width = Math.max(1, Math.floor(r.width * dpr));
-      c.height = Math.max(1, Math.floor(r.height * dpr));
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.lineCap = "round";
-      ctx.lineJoin = "round";
-    };
-
-    resize();
-    window.addEventListener("resize", resize);
-    return () => window.removeEventListener("resize", resize);
-  }, []);
-
-  const pos = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    const c = canvasRef.current!;
-    const r = c.getBoundingClientRect();
-    return { x: e.clientX - r.left, y: e.clientY - r.top };
-  };
-
-  const start = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    const c = canvasRef.current;
-    const ctx = c?.getContext("2d");
-    if (!c || !ctx) return;
-    c.setPointerCapture(e.pointerId);
-    setDown(true);
-    const p = pos(e);
-    ctx.beginPath();
-    ctx.moveTo(p.x, p.y);
-  };
-
-  const move = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    if (!down) return;
-    const c = canvasRef.current;
-    const ctx = c?.getContext("2d");
-    if (!c || !ctx) return;
-    const p = pos(e);
-    ctx.strokeStyle = "rgba(255,255,255,0.92)";
-    ctx.lineWidth = size;
-    ctx.lineTo(p.x, p.y);
-    ctx.stroke();
-  };
-
-  const end = () => setDown(false);
-
-  const clear = () => {
-    const c = canvasRef.current;
-    const ctx = c?.getContext("2d");
-    if (!c || !ctx) return;
-    const r = c.getBoundingClientRect();
-    ctx.clearRect(0, 0, r.width, r.height);
-  };
-
-  const download = () => {
-    const c = canvasRef.current;
-    if (!c) return;
-    const a = document.createElement("a");
-    a.href = c.toDataURL("image/png");
-    a.download = "dcf-doodle.png";
-    a.click();
-  };
-
-  return (
+    {/* LEFT SECTION */}
     <div>
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <p className="text-lg font-semibold">Doodle Pad</p>
-          <p className="text-sm text-[rgb(var(--fg)/0.72)]">Draw something joyful. Then download it.</p>
-        </div>
+      <h3 className="text-xl font-bold text-gray-800 mb-3">
+        Durlabhclap Foundation
+      </h3>
+      <p className="text-gray-600 leading-relaxed">
+        Protecting creativity & making learning joyful through 
+        an arts-based approach aligned with NEP 2020.
+      </p>
+    </div>
 
-        <div className="flex items-center gap-2">
-          <button onClick={clear} className="rounded-full border border-[rgb(var(--border))] bg-[rgb(var(--surface)/0.55)] px-4 py-2 text-xs hover:bg-[rgb(var(--surface)/0.80)] transition">
-            Clear
-          </button>
-          <button onClick={download} className="rounded-full bg-[rgb(var(--accent))] px-4 py-2 text-xs font-semibold text-[rgb(var(--bg))] shadow-lg">
-            Download
-          </button>
-        </div>
-      </div>
+    {/* MIDDLE SECTION */}
+    <div>
+      <h3 className="text-xl font-bold text-gray-800 mb-3">Contact</h3>
+      <p className="text-gray-600">📍 Himachal Pradesh, India</p>
+      <p className="text-gray-600">📧 contact@durlabhclapfoundation.org</p>
+      <p className="text-gray-600">📞 +91-9876543210</p>
+    </div>
 
-      <div className="mt-4 flex items-center gap-3 text-xs text-[rgb(var(--fg)/0.78)]">
-        <span>Brush</span>
-        <input
-          type="range"
-          min={2}
-          max={18}
-          value={size}
-          onChange={(e) => setSize(Number(e.target.value))}
-          className="w-48"
-        />
-        <span className="rounded-full border border-[rgb(var(--border))] bg-[rgb(var(--surface)/0.55)] px-3 py-1">{size}px</span>
-      </div>
-
-      <div className="mt-4 rounded-3xl border border-[rgb(var(--border))] bg-[rgb(var(--bg)/0.40)] overflow-hidden">
-        <canvas
-          ref={canvasRef}
-          className="h-[380px] w-full touch-none"
-          onPointerDown={start}
-          onPointerMove={move}
-          onPointerUp={end}
-          onPointerCancel={end}
-          aria-label="Doodle canvas"
-        />
+    {/* RIGHT SECTION */}
+    <div>
+      <h3 className="text-xl font-bold text-gray-800 mb-3">Social</h3>
+      <div className="flex gap-4 text-gray-600">
+        <a href="#" className="hover:text-black transition">Instagram</a>
+        <a href="#" className="hover:text-black transition">YouTube</a>
+        <a href="#" className="hover:text-black transition">Facebook</a>
       </div>
     </div>
-  );
-}
 
-/* =======================
-   Activity: Prompt Spinner
-   ======================= */
-function PromptSpinner() {
-  const prompts = useMemo(
-    () => [
-      "Draw a house in the Himalayas during rain — add one tiny surprise.",
-      "Make a 3-step clap rhythm and teach it to someone.",
-      "Invent a new animal and name it in your language.",
-      "Create a story using only 5 words (repeat allowed).",
-      "Build a paper toy: boat / plane / ring — then decorate it.",
-      "Make a ‘happy’ face using only triangles and circles.",
-      "Teach a younger kid: 1 small skill in 2 minutes.",
-      "Draw your favorite memory as 3 simple symbols.",
-    ],
-    []
-  );
+  </div>
 
-  const [prompt, setPrompt] = useState<string>(prompts[0]);
+  <div className="border-t border-gray-300 py-4 text-center text-gray-500">
+    © {new Date().getFullYear()} Durlabhclap Foundation — All Rights Reserved.
+  </div>
+</footer>
 
-  const spin = () => {
-    const next = prompts[Math.floor(Math.random() * prompts.length)];
-    setPrompt(next);
-  };
 
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(prompt);
-    } catch {}
-  };
-
-  return (
-    <div>
-      <p className="text-lg font-semibold">Creative Prompt Spinner</p>
-      <p className="text-sm text-[rgb(var(--fg)/0.72)]">One click = one playful activity.</p>
-
-      <div className="mt-4 rounded-3xl border border-[rgb(var(--border))] bg-[rgb(var(--bg)/0.44)] p-5">
-        <p className="text-base text-[rgb(var(--fg))]">{prompt}</p>
-
-        <div className="mt-4 flex flex-wrap gap-2">
-          <button onClick={spin} className="rounded-full bg-[rgb(var(--accent))] px-4 py-2 text-xs font-semibold text-[rgb(var(--bg))] shadow-lg">
-            New prompt
-          </button>
-          <button onClick={copy} className="rounded-full border border-[rgb(var(--border))] bg-[rgb(var(--surface)/0.55)] px-4 py-2 text-xs hover:bg-[rgb(var(--surface)/0.80)] transition">
-            Copy
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* =======================
-   Activity: Story Seed
-   ======================= */
-function StorySeed() {
-  const characters = ["A shy tiger", "A curious child", "A friendly crow", "A lost robot", "A brave grandma"] as const;
-  const places = ["a mountain village", "a school courtyard", "a forest trail", "a small library", "a riverside"] as const;
-  const conflicts = ["must solve a small mystery", "must help a friend", "must learn a new skill", "must fix a mistake", "must protect something precious"] as const;
-
-  const [c, setC] = useState<(typeof characters)[number]>(characters[0]);
-  const [p, setP] = useState<(typeof places)[number]>(places[0]);
-  const [k, setK] = useState<(typeof conflicts)[number]>(conflicts[0]);
-
-  const seed = `Story seed: ${c} in ${p} who ${k}. Add: (1) one funny moment, (2) one lesson, (3) one tiny twist.`;
-
-  const randomize = () => {
-    setC(characters[Math.floor(Math.random() * characters.length)]);
-    setP(places[Math.floor(Math.random() * places.length)]);
-    setK(conflicts[Math.floor(Math.random() * conflicts.length)]);
-  };
-
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(seed);
-    } catch {}
-  };
-
-  return (
-    <div>
-      <p className="text-lg font-semibold">Story Seed Builder</p>
-      <p className="text-sm text-[rgb(var(--fg)/0.72)]">Pick 3 knobs → instant story prompt.</p>
-
-      <div className="mt-4 grid gap-3 md:grid-cols-3">
-        <select value={c} onChange={(e) => setC(e.target.value as any)} className="rounded-2xl border border-[rgb(var(--border))] bg-[rgb(var(--surface)/0.55)] px-4 py-3 text-sm outline-none">
-          {characters.map((x) => <option key={x} value={x}>{x}</option>)}
-        </select>
-        <select value={p} onChange={(e) => setP(e.target.value as any)} className="rounded-2xl border border-[rgb(var(--border))] bg-[rgb(var(--surface)/0.55)] px-4 py-3 text-sm outline-none">
-          {places.map((x) => <option key={x} value={x}>{x}</option>)}
-        </select>
-        <select value={k} onChange={(e) => setK(e.target.value as any)} className="rounded-2xl border border-[rgb(var(--border))] bg-[rgb(var(--surface)/0.55)] px-4 py-3 text-sm outline-none">
-          {conflicts.map((x) => <option key={x} value={x}>{x}</option>)}
-        </select>
-      </div>
-
-      <div className="mt-4 rounded-3xl border border-[rgb(var(--border))] bg-[rgb(var(--bg)/0.44)] p-5">
-        <p className="text-sm text-[rgb(var(--fg)/0.86)]">{seed}</p>
-
-        <div className="mt-4 flex flex-wrap gap-2">
-          <button onClick={randomize} className="rounded-full bg-[rgb(var(--accent))] px-4 py-2 text-xs font-semibold text-[rgb(var(--bg))] shadow-lg">
-            Randomize
-          </button>
-          <button onClick={copy} className="rounded-full border border-[rgb(var(--border))] bg-[rgb(var(--surface)/0.55)] px-4 py-2 text-xs hover:bg-[rgb(var(--surface)/0.80)] transition">
-            Copy
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* =======================
-   Activity: Tiny Poem
-   ======================= */
-function TinyPoem() {
-  const starters = ["In the quiet morning,", "Under the mountain sky,", "In a classroom of laughter,", "Near the river bend,", "After a long rain,"] as const;
-  const middles = ["small hands build big dreams,", "curiosity wakes up,", "songs become ideas,", "stories learn to fly,", "colors find courage,"] as const;
-  const enders = ["and learning feels like home.", "and the heart says yes.", "and fear becomes smaller.", "and joy stays longer.", "and everyone belongs."] as const;
-
-  const [poem, setPoem] = useState(`${starters[0]}\n${middles[0]}\n${enders[0]}`);
-
-  const generate = () => {
-    const p =
-      `${starters[Math.floor(Math.random() * starters.length)]}\n` +
-      `${middles[Math.floor(Math.random() * middles.length)]}\n` +
-      `${enders[Math.floor(Math.random() * enders.length)]}`;
-    setPoem(p);
-  };
-
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(poem);
-    } catch {}
-  };
-
-  return (
-    <div>
-      <p className="text-lg font-semibold">Tiny Poem Generator</p>
-      <p className="text-sm text-[rgb(var(--fg)/0.72)]">3 lines. Simple. Shareable.</p>
-
-      <div className="mt-4 rounded-3xl border border-[rgb(var(--border))] bg-[rgb(var(--bg)/0.44)] p-5">
-        <pre className="whitespace-pre-wrap text-sm text-[rgb(var(--fg))]">{poem}</pre>
-
-        <div className="mt-4 flex flex-wrap gap-2">
-          <button onClick={generate} className="rounded-full bg-[rgb(var(--accent))] px-4 py-2 text-xs font-semibold text-[rgb(var(--bg))] shadow-lg">
-            Generate
-          </button>
-          <button onClick={copy} className="rounded-full border border-[rgb(var(--border))] bg-[rgb(var(--surface)/0.55)] px-4 py-2 text-xs hover:bg-[rgb(var(--surface)/0.80)] transition">
-            Copy
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* =======================
-   Activity: Pattern Weaver
-   ======================= */
-function PatternWeaver() {
-  const tiles = ["✦", "✶", "•", "✺", "✸", "❋", "✿", "◦"] as const;
-  const [n, setN] = useState(8);
-  const [grid, setGrid] = useState<string[][]>(() => gen(8, tiles));
-
-  function gen(size: number, set: readonly string[]) {
-    const g: string[][] = [];
-    for (let r = 0; r < size; r++) {
-      const row: string[] = [];
-      for (let c = 0; c < size; c++) {
-        const pick = set[(r * 3 + c * 5 + Math.floor(Math.random() * set.length)) % set.length];
-        row.push(pick);
-      }
-      g.push(row);
-    }
-    return g;
-  }
-
-  const regen = () => setGrid(gen(n, tiles));
-
-  const asText = grid.map((r) => r.join(" ")).join("\n");
-
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(asText);
-    } catch {}
-  };
-
-  useEffect(() => {
-    setGrid(gen(n, tiles));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [n]);
-
-  return (
-    <div>
-      <p className="text-lg font-semibold">Pattern Weaver</p>
-      <p className="text-sm text-[rgb(var(--fg)/0.72)]">A tiny pattern you can copy or use for crafts.</p>
-
-      <div className="mt-4 flex items-center gap-3 text-xs text-[rgb(var(--fg)/0.78)]">
-        <span>Size</span>
-        <input type="range" min={6} max={12} value={n} onChange={(e) => setN(Number(e.target.value))} />
-        <span className="rounded-full border border-[rgb(var(--border))] bg-[rgb(var(--surface)/0.55)] px-3 py-1">{n}×{n}</span>
-      </div>
-
-      <div className="mt-4 rounded-3xl border border-[rgb(var(--border))] bg-[rgb(var(--bg)/0.44)] p-5 overflow-hidden">
-        <div className="grid" style={{ gridTemplateColumns: `repeat(${n}, minmax(0, 1fr))`, gap: 8 }}>
-          {grid.flatMap((row, i) =>
-            row.map((cell, j) => (
-              <div
-                key={`${i}-${j}`}
-                className="rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--surface)/0.55)] py-3 text-center text-sm"
-              >
-                {cell}
-              </div>
-            ))
-          )}
-        </div>
-
-        <div className="mt-5 flex flex-wrap gap-2">
-          <button onClick={regen} className="rounded-full bg-[rgb(var(--accent))] px-4 py-2 text-xs font-semibold text-[rgb(var(--bg))] shadow-lg">
-            Regenerate
-          </button>
-          <button onClick={copy} className="rounded-full border border-[rgb(var(--border))] bg-[rgb(var(--surface)/0.55)] px-4 py-2 text-xs hover:bg-[rgb(var(--surface)/0.80)] transition">
-            Copy pattern
-          </button>
-        </div>
-      </div>
     </div>
   );
 }
